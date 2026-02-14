@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro">
+
+    <!-- Load physical parameters -->
+    <xacro:arg name="physics_config_file" default="$(find davinci_arm_description)/config/dynamics_params.yaml"/>
+
+    <!-- Convenience aliases -->
+    <xacro:property name="RAW" value="${xacro.load_yaml('$(arg physics_config_file)')}"/>
+    <xacro:property name="P" value="${RAW['davinci_arm_description']['ros__parameters']}"/>
+    <xacro:property name="L" value="${P['links']}"/>
+    <xacro:property name="J" value="${P['joints']}"/>
+
+    <!-- collision helper -->
+    <xacro:macro name="collision_module" params="link_name">
+        <collision name="${link_name}_collision">
+            <origin xyz="${L[link_name]['collision_origin_xyz'][0]} ${L[link_name]['collision_origin_xyz'][1]} ${L[link_name]['collision_origin_xyz'][2]}" rpy="${L[link_name]['collision_origin_rpy'][0]} ${L[link_name]['collision_origin_rpy'][1]} ${L[link_name]['collision_origin_rpy'][2]}"/>
+            <geometry>
+                <mesh filename="package://davinci_arm_description/models/davinci_arm_v1/meshes/collisions/${L[link_name]['mesh']}.stl" scale="1 1 1"/>
+            </geometry>
+        </collision>
+    </xacro:macro>
+
+
+    <!-- Inertial helper -->
+    <xacro:macro name="inertia_from_yaml" params="link_name">
+        <inertial>
+            <origin xyz="${L[link_name]['com_xyz'][0]} ${L[link_name]['com_xyz'][1]} ${L[link_name]['com_xyz'][2]}" rpy="0 0 0"/>
+            <mass value="${L[link_name]['mass']}"/>
+            <inertia ixx="${L[link_name]['inertia'][0]}" ixy="${L[link_name]['inertia'][1]}" ixz="${L[link_name]['inertia'][2]}" iyy="${L[link_name]['inertia'][3]}" iyz="${L[link_name]['inertia'][4]}" izz="${L[link_name]['inertia'][5]}"/>
+        </inertial>
+    </xacro:macro>
+
+    <!-- Visual helper -->
+    <xacro:macro name="visual_module" params="link_name">
+        <visual name="${link_name}_visual">
+            <origin xyz="${L[link_name]['visual_origin_xyz'][0]} ${L[link_name]['visual_origin_xyz'][1]} ${L[link_name]['visual_origin_xyz'][2]}" rpy="${L[link_name]['visual_origin_rpy'][0]} ${L[link_name]['visual_origin_rpy'][1]} ${L[link_name]['visual_origin_rpy'][2]}"/>
+            <geometry>
+                <mesh filename="package://davinci_arm_description/models/davinci_arm_v1/meshes/visuals/${L[link_name]['mesh']}.dae" scale="1 1 1"/>
+            </geometry>
+        </visual>
+    </xacro:macro>
+
+    <!-- Link helper -->
+    <xacro:macro name="link_module" params="link_name">
+        <link name="${link_name}">
+            <xacro:collision_module link_name="${link_name}"/>
+            <xacro:visual_module link_name="${link_name}"/>
+            <xacro:inertia_from_yaml link_name="${link_name}"/>
+        </link>
+    </xacro:macro>
+
+    <!-- Join helper -->
+    <xacro:macro name="joint_module" params="joint_name parent child xyz rpy axis">
+        <joint name="${joint_name}" type="revolute">
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+            <axis xyz="${axis}"/>
+            <limit lower="${J[joint_name]['limit_lower']}" upper="${J[joint_name]['limit_upper']}" effort="${J[joint_name]['effort']}" velocity="${J[joint_name]['velocity']}"/>
+            <dynamics damping="${J[joint_name]['damping']}" friction="${J[joint_name]['friction']}"/>
+        </joint>
+    </xacro:macro>
+
+</robot>

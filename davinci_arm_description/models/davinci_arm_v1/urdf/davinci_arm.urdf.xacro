@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro" name="davinci_arm">
+
+  <!-- Bring in helpers -->
+  <xacro:include filename="$(find davinci_arm_description)/models/davinci_arm_v1/urdf/davinci_arm_helpers.xacro"/>
+
+  <!-- World link -->
+  <link name="world"/>
+
+  <!-- Base link -->
+  <xacro:link_module link_name="base_link"/>
+
+  <!-- Shoulder link -->
+  <xacro:link_module link_name="shoulder_link"/>
+
+  <!-- Arm link -->
+  <xacro:link_module link_name="arm_link"/>
+
+  <!-- Elbow link -->
+  <xacro:link_module link_name="elbow_link"/>
+
+  <!-- Forearm link -->
+  <xacro:link_module link_name="forearm_link"/>
+
+  <!-- End effector link -->
+  <xacro:link_module link_name="end_effector_link"/>
+
+  <!-- Joint between world and base-->
+  <joint name="world_base_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- Joint between base and shoulder -->
+  <xacro:joint_module joint_name="shoulder_link_joint" parent="base_link" child="shoulder_link" xyz="0.00000 0.00000 0.13400" rpy="0.00000 0.00000 0.00000" axis="0.00000 0.00000 1.00000"/>
+
+  <!-- Joint between shoulder and arm -->
+  <xacro:joint_module joint_name="arm_link_joint" parent="shoulder_link" child="arm_link" xyz="0.02680 0.08918 0.12622" rpy="1.57080 0.00000 0.00000" axis="0.00000 0.00000 1.00000"/>
+
+  <!-- Joint between arm and elbow -->
+  <xacro:joint_module joint_name="elbow_link_joint" parent="arm_link" child="elbow_link" xyz="0.24957 0.24801 0.00423" rpy="3.14159 0.00000 0.00000" axis="0.00000 0.00000 1.00000"/>
+
+  <!-- Joint between elbow and forearm -->
+  <xacro:joint_module joint_name="forearm_link_joint" parent="elbow_link" child="forearm_link" xyz="0.07837 -0.02093 -0.08296" rpy="1.57080 0.00000 1.29154" axis="0.00000 0.00000 1.00000"/>
+
+  <!-- Joint between forearm and end effector -->
+  <xacro:joint_module joint_name="end_effector_link_joint" parent="forearm_link" child="end_effector_link" xyz="0.00420 0.00003 0.27143" rpy="1.57212 0.27925 0.00481" axis="0.00000 0.00000 1.00000"/>
+
+</robot>

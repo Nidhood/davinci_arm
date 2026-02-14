@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <!-- Publish the prop arm description model -->
+    <include file="$(find-pkg-share davinci_arm_description)/launch/publish_urdf.launch.py"/>
+
+    <!-- Display RViz -->
+    <include file="$(find-pkg-share davinci_arm_description)/launch/display_model.launch.py"/>
+
+</launch>
