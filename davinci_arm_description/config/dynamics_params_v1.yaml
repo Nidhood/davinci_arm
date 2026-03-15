@@ -1,0 +1,103 @@
+davinci_arm_description:
+  ros__parameters:
+    links:
+      base_link:
+        mesh: "base"
+        mass: 4.5
+        com_xyz: [-0.02, 0.00, 0.06]
+        inertia: [0.060, 0.000, 0.000, 0.075, 0.000, 0.055]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [0.0, 0.0, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [0.0, 0.0, 0.0]
+
+      shoulder_link:
+        mesh: "shoulder"
+        mass: 3.2
+        com_xyz: [0.01, 0.02, 0.09]
+        inertia: [0.030, 0.000, 0.000, 0.025, 0.000, 0.018]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [0.0, 0.0, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [0.0, 0.0, 0.0]
+
+      arm_link:
+        mesh: "arm"
+        mass: 3.4
+        com_xyz: [0.10, 0.10, -0.03]
+        inertia: [0.080, 0.000, 0.000, 0.095, 0.000, 0.030]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [-1.57080, 0.0, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [-1.57080, 0.0, 0.0]
+
+      elbow_link:
+        mesh: "elbow"
+        mass: 1.9
+        com_xyz: [0.01, -0.01, -0.07]
+        inertia: [0.012, 0.000, 0.000, 0.010, 0.000, 0.008]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [1.57080, 0.0, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [1.57080, 0.0, 0.0]
+
+      forearm_link:
+        mesh: "wrist"
+        mass: 1.6
+        com_xyz: [0.00, 0.00, 0.16]
+        inertia: [0.020, 0.000, 0.000, 0.020, 0.000, 0.004]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [0.0, -1.29154, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [0.0, -1.29154, 0.0]
+
+      end_effector_link:
+        mesh: "end_effector"
+        mass: 0.8
+        com_xyz: [0.02, 0.00, 0.00]
+        inertia: [0.0020, 0.0000, 0.0000, 0.0022, 0.0000, 0.0006]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [-1.57078, -0.00462, -0.00462]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [-1.57078, -0.00462, -0.00462]
+
+    joints:
+      shoulder_link_joint:
+        damping: 0.15
+        friction: 0.15
+        limit_lower: -3.14
+        limit_upper: 3.14
+        effort: 35.0
+        velocity: 2.0
+
+      arm_link_joint:
+        damping: 0.15
+        friction: 0.15
+        limit_lower: -3.14
+        limit_upper: 3.14
+        effort: 30.0
+        velocity: 2.0
+
+      elbow_link_joint:
+        damping: 0.12
+        friction: 0.12
+        limit_lower: -3.14
+        limit_upper: 3.14
+        effort: 25.0
+        velocity: 2.5
+
+      forearm_link_joint:
+        damping: 0.10
+        friction: 0.10
+        limit_lower: -3.14
+        limit_upper: 3.14
+        effort: 18.0
+        velocity: 3.0
+
+      end_effector_link_joint:
+        damping: 0.08
+        friction: 0.08
+        limit_lower: -3.14
+        limit_upper: 3.14
+        effort: 10.0
+        velocity: 3.5

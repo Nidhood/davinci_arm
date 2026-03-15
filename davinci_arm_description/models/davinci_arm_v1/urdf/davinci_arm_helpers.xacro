@@ -2,7 +2,7 @@
 <robot xmlns:xacro="https://www.ros.org/wiki/xacro">
 
     <!-- Load physical parameters -->
-    <xacro:arg name="physics_config_file" default="$(find davinci_arm_description)/config/dynamics_params.yaml"/>
+    <xacro:arg name="physics_config_file" default="$(find davinci_arm_description)/config/dynamics_params_v1.yaml"/>
 
     <!-- Convenience aliases -->
     <xacro:property name="RAW" value="${xacro.load_yaml('$(arg physics_config_file)')}"/>

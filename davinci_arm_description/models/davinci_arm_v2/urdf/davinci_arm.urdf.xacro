@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro" name="davinci_arm" version="1.0">
+
+  <!-- Bring in helpers -->
+  <xacro:include filename="$(find davinci_arm_description)/models/davinci_arm_v2/urdf/davinci_arm_helpers.xacro"/>
+
+  <!-- World link -->
+  <link name="world"/>
+
+  <!-- Base link -->
+  <xacro:link_module link_name="base_link"/>
+
+  <!-- Shoulder link -->
+  <xacro:link_module link_name="shoulder_link"/>
+
+  <!-- Bicep link -->
+  <xacro:link_module link_name="bicep_link"/>
+
+  <!-- Arm link -->
+  <xacro:link_module link_name="arm_link"/>
+
+  <!-- Wrist link -->
+  <xacro:link_module link_name="wrist_link"/>
+
+  <!-- End effector link -->
+  <xacro:link_module link_name="end_effector_link"/>
+
+  <!-- Joint between world and base -->
+  <joint name="world_base_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- Joint between base and shoulder -->
+  <xacro:joint_module joint_name="shoulder_link_joint" parent="base_link" child="shoulder_link" xyz="0.0369 -0.0002 0.0767" rpy="0.0000 0.0000 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+  <!-- Joint between shoulder and bicep -->
+  <xacro:joint_module joint_name="bicep_link_joint" parent="shoulder_link" child="bicep_link" xyz="-0.0002 0.0640 0.1632" rpy="-1.5708 0.0000 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+  <!-- Joint between bicep and arm -->
+  <xacro:joint_module joint_name="arm_link_joint" parent="bicep_link" child="arm_link" xyz="0.0002 -0.2898 -0.0020" rpy="0.0000 0.0000 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+  <!-- Joint between arm and wrist -->
+  <xacro:joint_module joint_name="wrist_link_joint" parent="arm_link" child="wrist_link" xyz="0.1632 -0.0200 -0.0620" rpy="1.5708 -0.0000 -1.5708" axis="0.0000 0.0000 1.0000"/>
+
+  <!-- Joint between wrist and end effector -->
+  <xacro:joint_module joint_name="end_effector_link_joint" parent="wrist_link" child="end_effector_link" xyz="0.0000 0.0490 -0.1468" rpy="-1.3322 1.5708 0.2386" axis="0.0000 0.0000 1.0000"/>
+
+  <!-- Include motor model Gazebo plugin -->
+  <xacro:include filename="$(find davinci_arm_gazebo_plugins)/urdf/davinci_arm_joint_position_model.xacro"/>
+
+  <!-- Include control interface -->
+  <xacro:include filename="$(find davinci_arm_gazebo_plugins)/urdf/davinci_arm_control.xacro"/>
+
+</robot>

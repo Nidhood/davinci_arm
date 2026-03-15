@@ -1,0 +1,8 @@
+std_msgs header
+
+sensor_msgs/JointState shoulder_state
+sensor_msgs/JointState arm_state
+sensor_msgs/JointState elbow_state
+sensor_msgs/JointState forearm_state
+sensor_msgs/JointState end_effector_state
+
