@@ -14,6 +14,7 @@
 
     <!-- Core ROS2 dependencies -->
     <depend>rclcpp</depend>
+    <depend>davinci_arm_msgs</depend>
 
     <!-- Gazebo dependencies -->
     <depend>gz_ros2_control</depend>
