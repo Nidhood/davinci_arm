@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro" name="davinci_arm" version="1.0">
+
+    <!-- Load helper macros for ROS visuals and robot structure -->
+    <xacro:include filename="$(find davinci_arm_description)/models/davinci_arm_v3/urdf/davinci_arm_helpers.xacro"/>
+
+    <!-- Global ROS material palette -->
+    <xacro:material_palette/>
+
+    <!-- World frame -->
+    <link name="world"/>
+
+    <!-- Logical robot links -->
+    <xacro:link_module link_name="base_link"/>
+    <xacro:link_module link_name="shoulder_link"/>
+    <xacro:link_module link_name="bicep_link"/>
+    <xacro:link_module link_name="arm_link"/>
+    <xacro:link_module link_name="wrist_link"/>
+    <xacro:link_module link_name="end_effector_link"/>
+
+    <!-- Fixed joint between world and robot base -->
+    <joint name="world_base_joint" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint>
+
+    <!-- Joint between base and shoulder -->
+    <xacro:joint_module joint_name="shoulder_link_joint" parent="base_link" child="shoulder_link" xyz="0.0000 0.0000 0.0998" rpy="3.14159 0.0000 1.5708" axis="0.0000 0.0000 1.0000"/>
+
+    <!-- Joint between shoulder and bicep -->
+    <xacro:joint_module joint_name="bicep_link_joint" parent="shoulder_link" child="bicep_link" xyz="0.0550 0.0000 -0.0660" rpy="-3.14159 1.5708 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+    <!-- Joint between bicep and arm -->
+    <xacro:joint_module joint_name="arm_link_joint" parent="bicep_link" child="arm_link" xyz="0.2550 0.0000 -0.0110" rpy="3.14159 0.0000 3.14159" axis="0.0000 0.0000 1.0000"/>
+
+    <!-- Joint between arm and wrist -->
+    <xacro:joint_module joint_name="wrist_link_joint" parent="arm_link" child="wrist_link" xyz="-0.2245 0.0000 -0.0070" rpy="-3.14159 0.0000 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+    <!-- Joint between wrist and end effector -->
+    <xacro:joint_module joint_name="end_effector_link_joint" parent="wrist_link" child="end_effector_link" xyz="-0.0430 0.0000 -0.0405" rpy="3.14159 -1.5708 0.0000" axis="0.0000 0.0000 1.0000"/>
+
+    <!-- Gazebo materials -->
+    <xacro:include filename="$(find davinci_arm_gazebo_bridge)/urdf/gazebo_materials_support.xacro"/>
+
+    <!-- Gazebo motor model -->
+    <xacro:include filename="$(find davinci_arm_gazebo_plugins)/urdf/davinci_arm_joint_position_model.xacro"/>
+
+    <!-- Control interface -->
+    <xacro:include filename="$(find davinci_arm_gazebo_plugins)/urdf/davinci_arm_control.xacro"/>
+
+</robot>

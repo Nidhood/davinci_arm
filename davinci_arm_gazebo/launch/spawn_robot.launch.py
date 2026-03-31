@@ -1,4 +1,4 @@
-  #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 from launch_ros.actions import Node
 from launch import LaunchDescription
@@ -13,10 +13,10 @@ def generate_launch_description():
     entity_name = "davinci_arm"
 
     # Define the starting position of the robot in the Gazebo simulation:
-    position = [0.29, -0.04, 0.9]
+    position = [0.29, -0.04, 0.81]
 
     # Define the orientation of the robot in the Gazebo simulation:
-    orientation = [0.0, 0.0, -0.39]
+    orientation = [0.0, 0.0, 1.0]
 
     # Spawn the robot model in the Gazebo simulation:
     spawn_robot = Node(

@@ -12,7 +12,7 @@ def generate_launch_description():
     xacro_file = PathJoinSubstitution([
         FindPackageShare('davinci_arm_description'),
         'models',
-        'davinci_arm_v2',
+        'davinci_arm_v3',
         'urdf',
         'davinci_arm.urdf.xacro'
     ])
@@ -21,7 +21,7 @@ def generate_launch_description():
     physics_config_file = PathJoinSubstitution([
         FindPackageShare('davinci_arm_description'),
         'config',
-        'dynamics_params_v2.yaml'
+        'dynamics_params_v3.yaml'
     ])
     
     # Robot state publisher node:

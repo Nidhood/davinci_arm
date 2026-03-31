@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro">
+
+    <!-- Gazebo material overrides separated from the ROS visual materials -->
+    <xacro:macro name="gazebo_visual_material" params="link_name visual_name ambient diffuse specular:='0.1 0.1 0.1 1.0' emissive:='0.0 0.0 0.0 1.0'">
+        <gazebo reference="${link_name}">
+            <visual name="${visual_name}">
+                <material>
+                    <ambient>${ambient}</ambient>
+                    <diffuse>${diffuse}</diffuse>
+                    <specular>${specular}</specular>
+                    <emissive>${emissive}</emissive>
+                </material>
+            </visual>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:macro name="gazebo_materials_module">
+
+        <!-- base_link -->
+        <xacro:gazebo_visual_material link_name="base_link" visual_name="base_link_base_joint" ambient="0.866667 0.909804 1.0 1.0" diffuse="0.866667 0.909804 1.0 1.0"/>
+
+        <!-- shoulder_link -->
+        <xacro:gazebo_visual_material link_name="shoulder_link" visual_name="shoulder_link_size_2_flange" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="shoulder_link" visual_name="shoulder_link_shoulder_base" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="shoulder_link" visual_name="shoulder_link_size_2_cap" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+
+        <!-- bicep_link -->
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_1_cap" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_2_flange_main" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_shoulder_base" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_1_flange_front" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_1_shoulder" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_upper_arm" ambient="0.866667 0.909804 1.0 1.0" diffuse="0.866667 0.909804 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_2_cap_rear" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_2_flange_rear" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="bicep_link" visual_name="bicep_link_size_1_flange_rear" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+
+        <!-- arm_link -->
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_size_0_flange_front" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_size_0_flange_mid" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_size_1_flange" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_size_0_cap" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_elbow" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_size_0_shoulder_1" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="arm_link" visual_name="arm_link_arm_2" ambient="0.866667 0.909804 1.0 1.0" diffuse="0.866667 0.909804 1.0 1.0"/>
+
+        <!-- wrist_link -->
+        <xacro:gazebo_visual_material link_name="wrist_link" visual_name="wrist_link_size_0_cap" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="wrist_link" visual_name="wrist_link_size_0_shoulder_1" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="wrist_link" visual_name="wrist_link_size_0_flange" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+
+        <!-- end_effector_link -->
+        <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_size_0_shoulder_3" ambient="0.301961 0.301961 0.301961 1.0" diffuse="0.301961 0.301961 0.301961 1.0"/>
+        <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_size_0_cap" ambient="0.0 0.72549 1.0 1.0" diffuse="0.0 0.72549 1.0 1.0"/>
+        <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_size_0_flange" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
+        <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_tool_holder" ambient="0.866667 0.909804 1.0 1.0" diffuse="0.866667 0.909804 1.0 1.0"/>
+
+    </xacro:macro>
+
+</robot>

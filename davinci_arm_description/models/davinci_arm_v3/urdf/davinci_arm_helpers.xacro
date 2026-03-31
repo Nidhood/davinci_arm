@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro">
+
+    <!-- Load dynamics and collision parameters -->
+    <xacro:arg name="physics_config_file" default="$(find davinci_arm_description)/config/dynamics_params_v3.yaml"/>
+
+    <!-- Convenience aliases for YAML access -->
+    <xacro:property name="RAW" value="${xacro.load_yaml('$(arg physics_config_file)')}"/>
+    <xacro:property name="P" value="${RAW['davinci_arm_description']['ros__parameters']}"/>
+    <xacro:property name="L" value="${P['links']}"/>
+    <xacro:property name="J" value="${P['joints']}"/>
+    <xacro:property name="MESH_DIR" value="package://davinci_arm_description/models/davinci_arm_v3/meshes"/>
+
+    <!-- Global ROS material palette -->
+    <xacro:macro name="material_palette">
+        <material name="cad_light_blue">
+            <color rgba="0.866667 0.909804 1.0 1.0"/>
+        </material>
+
+        <material name="cad_dark_gray">
+            <color rgba="0.101961 0.101961 0.101961 1.0"/>
+        </material>
+
+        <material name="cad_medium_gray">
+            <color rgba="0.301961 0.301961 0.301961 1.0"/>
+        </material>
+
+        <material name="cad_cyan">
+            <color rgba="0.0 0.72549 1.0 1.0"/>
+        </material>
+    </xacro:macro>
+
+    <!-- Reusable visual component for a single STL mesh -->
+    <xacro:macro name="mesh_component" params="visual_name mesh_file xyz rpy material_name">
+        <visual name="${visual_name}">
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+            <geometry>
+                <mesh filename="${MESH_DIR}/${mesh_file}.stl" scale="1 1 1"/>
+            </geometry>
+            <material name="${material_name}"/>
+        </visual>
+    </xacro:macro>
+
+    <xacro:macro name="collision_mesh_component" params="collision_name mesh_file xyz rpy">
+        <collision name="${collision_name}">
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+            <geometry>
+                <mesh filename="${MESH_DIR}/${mesh_file}.stl" scale="1 1 1"/>
+            </geometry>
+        </collision>
+    </xacro:macro>
+
+    <!-- Collision geometry taken from YAML -->
+    <xacro:macro name="collision_module" params="link_name">
+
+        <xacro:if value="${link_name == 'base_link'}">
+            <xacro:collision_mesh_component collision_name="base_link_base_joint_collision" mesh_file="base_joint" xyz="0 0 -0.006" rpy="1.5708 0 0"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'shoulder_link'}">
+            <xacro:collision_mesh_component collision_name="shoulder_link_size_2_flange_collision" mesh_file="size_2_flange" xyz="0 0 0.005" rpy="-1.5708 0 -3.14159"/>
+            <xacro:collision_mesh_component collision_name="shoulder_link_shoulder_base_collision" mesh_file="shoulderbse__1" xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="shoulder_link_size_2_cap_collision" mesh_file="size_2_cap" xyz="0 0 -0.122" rpy="-1.5708 0 3.14159"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'bicep_link'}">
+            <xacro:collision_mesh_component collision_name="bicep_link_size_1_cap_collision" mesh_file="size_1_cap" xyz="0.255 0 -0.116" rpy="-1.5708 0 3.14159"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_2_flange_main_collision" mesh_file="size_2_flange" xyz="0.05 0 -0.066" rpy="3.14159 0 1.5708"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_shoulder_base_collision" mesh_file="shoulderbse__1" xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_1_flange_front_collision" mesh_file="size_1_flange" xyz="0.255 0 -0.016" rpy="1.5708 0 -1.5708"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_1_shoulder_collision" mesh_file="size_1_shoulder" xyz="0.255 0 -0.011" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_upper_arm_collision" mesh_file="upper_arm" xyz="0.055 0 -0.066" rpy="3.14159 0 1.5708"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_2_cap_rear_collision" mesh_file="size_2_cap" xyz="0 0 -0.122" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_2_flange_rear_collision" mesh_file="size_2_flange" xyz="0 0 0.005" rpy="-1.5708 0 1.5708"/>
+            <xacro:collision_mesh_component collision_name="bicep_link_size_1_flange_rear_collision" mesh_file="size_1_flange" xyz="0.212 0 -0.066" rpy="-1.5708 1.5708 0"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'arm_link'}">
+            <xacro:collision_mesh_component collision_name="arm_link_size_0_flange_front_collision" mesh_file="size_0__flange" xyz="-0.2245 0 -0.004" rpy="-1.5708 0 1.5708"/>
+            <xacro:collision_mesh_component collision_name="arm_link_size_0_flange_mid_collision" mesh_file="size_0__flange" xyz="-0.187 0 -0.05" rpy="0 0 -1.5708"/>
+            <xacro:collision_mesh_component collision_name="arm_link_size_1_flange_collision" mesh_file="size_1_flange" xyz="-0.055 0 -0.05" rpy="1.5708 1.5708 0"/>
+            <xacro:collision_mesh_component collision_name="arm_link_size_0_cap_collision" mesh_file="size_0_cap" xyz="-0.2245 0 -0.095" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="arm_link_elbow_collision" mesh_file="elbow" xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="arm_link_size_0_shoulder_1_collision" mesh_file="size_0_shoulder_1" xyz="-0.2245 0 -0.007" rpy="-1.5708 0 0"/>
+            <xacro:collision_mesh_component collision_name="arm_link_arm_2_collision" mesh_file="arm_2" xyz="-0.05 0 -0.05" rpy="0 0 1.5708"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'wrist_link'}">
+            <xacro:collision_mesh_component collision_name="wrist_link_size_0_cap_collision" mesh_file="size_0_cap" xyz="0.045 0 -0.0405" rpy="1.5708 1.5708 0"/>
+            <xacro:collision_mesh_component collision_name="wrist_link_size_0_shoulder_1_collision" mesh_file="size_0_shoulder_1" xyz="-0.043 0 -0.0405" rpy="-1.5708 -1.5708 0"/>
+            <xacro:collision_mesh_component collision_name="wrist_link_size_0_flange_collision" mesh_file="size_0__flange" xyz="-0.04 0 -0.0405" rpy="0 0 1.5708"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'end_effector_link'}">
+            <xacro:collision_mesh_component collision_name="end_effector_link_size_0_shoulder_3_collision" mesh_file="size_0_shoulder_3" xyz="-0.043 0 -0.0405" rpy="-1.5708 -1.5708 0"/>
+            <xacro:collision_mesh_component collision_name="end_effector_link_size_0_cap_collision" mesh_file="size_0_cap" xyz="0.045 0 -0.0405" rpy="1.5708 1.5708 0"/>
+            <xacro:collision_mesh_component collision_name="end_effector_link_size_0_flange_collision" mesh_file="size_0__flange" xyz="-0.05 0 -0.0405" rpy="-3.14159 0 -1.5708"/>
+            <xacro:collision_mesh_component collision_name="end_effector_link_tool_holder_collision" mesh_file="tool_holder" xyz="-0.053 0 -0.0405" rpy="3.14159 -0.992087 -1.5708"/>
+        </xacro:if>
+
+    </xacro:macro>
+
+    <!-- Inertial parameters taken from YAML -->
+    <xacro:macro name="inertia_from_yaml" params="link_name">
+        <inertial>
+            <origin xyz="${L[link_name]['com_xyz'][0]} ${L[link_name]['com_xyz'][1]} ${L[link_name]['com_xyz'][2]}" rpy="0 0 0"/>
+            <mass value="${L[link_name]['mass']}"/>
+            <inertia ixx="${L[link_name]['inertia'][0]}" ixy="${L[link_name]['inertia'][1]}" ixz="${L[link_name]['inertia'][2]}" iyy="${L[link_name]['inertia'][3]}" iyz="${L[link_name]['inertia'][4]}" izz="${L[link_name]['inertia'][5]}"/>
+        </inertial>
+    </xacro:macro>
+
+    <!-- Visual assembly of each logical link -->
+    <xacro:macro name="visual_module" params="link_name">
+
+        <xacro:if value="${link_name == 'base_link'}">
+            <xacro:mesh_component visual_name="base_link_base_joint" mesh_file="base_joint" xyz="0 0 -0.006" rpy="1.5708 0 0" material_name="cad_light_blue"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'shoulder_link'}">
+            <xacro:mesh_component visual_name="shoulder_link_size_2_flange" mesh_file="size_2_flange" xyz="0 0 0.005" rpy="-1.5708 0 -3.14159" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="shoulder_link_shoulder_base" mesh_file="shoulderbse__1" xyz="0 0 0" rpy="-1.5708 0 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="shoulder_link_size_2_cap" mesh_file="size_2_cap" xyz="0 0 -0.122" rpy="-1.5708 0 3.14159" material_name="cad_cyan"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'bicep_link'}">
+            <xacro:mesh_component visual_name="bicep_link_size_1_cap" mesh_file="size_1_cap" xyz="0.255 0 -0.116" rpy="-1.5708 0 3.14159" material_name="cad_cyan"/>
+            <xacro:mesh_component visual_name="bicep_link_size_2_flange_main" mesh_file="size_2_flange" xyz="0.05 0 -0.066" rpy="3.14159 0 1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="bicep_link_shoulder_base" mesh_file="shoulderbse__1" xyz="0 0 0" rpy="-1.5708 0 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="bicep_link_size_1_flange_front" mesh_file="size_1_flange" xyz="0.255 0 -0.016" rpy="1.5708 0 -1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="bicep_link_size_1_shoulder" mesh_file="size_1_shoulder" xyz="0.255 0 -0.011" rpy="-1.5708 0 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="bicep_link_upper_arm" mesh_file="upper_arm" xyz="0.055 0 -0.066" rpy="3.14159 0 1.5708" material_name="cad_light_blue"/>
+            <xacro:mesh_component visual_name="bicep_link_size_2_cap_rear" mesh_file="size_2_cap" xyz="0 0 -0.122" rpy="-1.5708 0 0" material_name="cad_cyan"/>
+            <xacro:mesh_component visual_name="bicep_link_size_2_flange_rear" mesh_file="size_2_flange" xyz="0 0 0.005" rpy="-1.5708 0 1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="bicep_link_size_1_flange_rear" mesh_file="size_1_flange" xyz="0.212 0 -0.066" rpy="-1.5708 1.5708 0" material_name="cad_dark_gray"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'arm_link'}">
+            <xacro:mesh_component visual_name="arm_link_size_0_flange_front" mesh_file="size_0__flange" xyz="-0.2245 0 -0.004" rpy="-1.5708 0 1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="arm_link_size_0_flange_mid" mesh_file="size_0__flange" xyz="-0.187 0 -0.05" rpy="0 0 -1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="arm_link_size_1_flange" mesh_file="size_1_flange" xyz="-0.055 0 -0.05" rpy="1.5708 1.5708 0" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="arm_link_size_0_cap" mesh_file="size_0_cap" xyz="-0.2245 0 -0.095" rpy="-1.5708 0 0" material_name="cad_cyan"/>
+            <xacro:mesh_component visual_name="arm_link_elbow" mesh_file="elbow" xyz="0 0 0" rpy="-1.5708 0 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="arm_link_size_0_shoulder_1" mesh_file="size_0_shoulder_1" xyz="-0.2245 0 -0.007" rpy="-1.5708 0 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="arm_link_arm_2" mesh_file="arm_2" xyz="-0.05 0 -0.05" rpy="0 0 1.5708" material_name="cad_light_blue"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'wrist_link'}">
+            <xacro:mesh_component visual_name="wrist_link_size_0_cap" mesh_file="size_0_cap" xyz="0.045 0 -0.0405" rpy="1.5708 1.5708 0" material_name="cad_cyan"/>
+            <xacro:mesh_component visual_name="wrist_link_size_0_shoulder_1" mesh_file="size_0_shoulder_1" xyz="-0.043 0 -0.0405" rpy="-1.5708 -1.5708 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="wrist_link_size_0_flange" mesh_file="size_0__flange" xyz="-0.04 0 -0.0405" rpy="0 0 1.5708" material_name="cad_dark_gray"/>
+        </xacro:if>
+
+        <xacro:if value="${link_name == 'end_effector_link'}">
+            <xacro:mesh_component visual_name="end_effector_link_size_0_shoulder_3" mesh_file="size_0_shoulder_3" xyz="-0.043 0 -0.0405" rpy="-1.5708 -1.5708 0" material_name="cad_medium_gray"/>
+            <xacro:mesh_component visual_name="end_effector_link_size_0_cap" mesh_file="size_0_cap" xyz="0.045 0 -0.0405" rpy="1.5708 1.5708 0" material_name="cad_cyan"/>
+            <xacro:mesh_component visual_name="end_effector_link_size_0_flange" mesh_file="size_0__flange" xyz="-0.05 0 -0.0405" rpy="-3.14159 0 -1.5708" material_name="cad_dark_gray"/>
+            <xacro:mesh_component visual_name="end_effector_link_tool_holder" mesh_file="tool_holder" xyz="-0.053 0 -0.0405" rpy="3.14159 -0.992087 -1.5708" material_name="cad_light_blue"/>
+        </xacro:if>
+
+    </xacro:macro>
+
+    <!-- Complete logical link -->
+    <xacro:macro name="link_module" params="link_name">
+        <link name="${link_name}">
+            <xacro:collision_module link_name="${link_name}"/>
+            <xacro:visual_module link_name="${link_name}"/>
+            <xacro:inertia_from_yaml link_name="${link_name}"/>
+        </link>
+    </xacro:macro>
+
+    <!-- Revolute joint parameters taken from YAML -->
+    <xacro:macro name="joint_module" params="joint_name parent child xyz rpy axis">
+        <joint name="${joint_name}" type="revolute">
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+            <axis xyz="${axis}"/>
+            <limit lower="${J[joint_name]['limit_lower']}" upper="${J[joint_name]['limit_upper']}" effort="${J[joint_name]['effort']}" velocity="${J[joint_name]['velocity']}"/>
+            <dynamics damping="${J[joint_name]['damping']}" friction="${J[joint_name]['friction']}"/>
+        </joint>
+    </xacro:macro>
+
+</robot>

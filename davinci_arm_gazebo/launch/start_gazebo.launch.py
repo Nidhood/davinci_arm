@@ -5,8 +5,6 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-from launch_ros.actions import Node
-from launch.conditions import IfCondition
 
 def generate_launch_description():
     
@@ -31,12 +29,14 @@ def generate_launch_description():
     # Find your packages:
     pkg_gz   = FindPackageShare("davinci_arm_gazebo")
     pkg_desc = FindPackageShare("davinci_arm_description")
+    pkg_bridge = FindPackageShare("davinci_arm_gazebo_bridge")
 
     # Launch files:
     gazebo_launch     = PathJoinSubstitution([pkg_gz,   "launch", "spawn_world.launch.py"])
     urdf_launch       = PathJoinSubstitution([pkg_desc, "launch", "publish_urdf.launch.py"])
     spawn_launch      = PathJoinSubstitution([pkg_gz,   "launch", "spawn_robot.launch.py"])
     spawn_models_launch = PathJoinSubstitution([pkg_gz, "launch", "spawn_models.launch.py"])
+    spawn_gazebo_bridge = PathJoinSubstitution([pkg_bridge, "launch", "gazebo_bridge.launch.py"])
 
     return LaunchDescription([
         use_sim_time_arg,
@@ -74,5 +74,14 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(spawn_models_launch),
                 launch_arguments={'use_sim_time': use_sim_time}.items()
             ) ]
+        ),       
+
+        #6. Spawn gazebo and ROS2 bridge:
+        TimerAction(
+            period = 8.0,
+            actions=[ IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(spawn_gazebo_bridge),
+                launch_arguments={'use_sim_time': use_sim_time}.items()
+            )]
         )
     ])
