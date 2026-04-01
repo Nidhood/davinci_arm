@@ -54,7 +54,11 @@ def generate_launch_description():
             period=3.0,
             actions=[ IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(urdf_launch),
-                launch_arguments={'use_sim_time': use_sim_time}.items()
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'launch_state_publisher': 'true',
+                    'joint_states_topic': '/davinci_arm/joint_states'
+                }.items()
             ) ]
         ),
 

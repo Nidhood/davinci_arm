@@ -3,68 +3,71 @@
 
     <gazebo>
 
-        <!-- Position controllers -->
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
             <joint_name>shoulder_link_joint</joint_name>
             <topic>/davinci_arm/shoulder_cmd_pos</topic>
-            <p_gain>1.0</p_gain>
-            <i_gain>0.1</i_gain>
-            <d_gain>0.01</d_gain>
-            <i_max>1.0</i_max>
-            <i_min>-1.0</i_min>
+            <p_gain>20.0</p_gain>
+            <i_gain>0.5</i_gain>
+            <d_gain>1.0</d_gain>
+            <i_max>5.0</i_max>
+            <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
+            <initial_position>0.0</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
             <joint_name>bicep_link_joint</joint_name>
             <topic>/davinci_arm/bicep_cmd_pos</topic>
-            <p_gain>1.0</p_gain>
-            <i_gain>0.1</i_gain>
-            <d_gain>0.01</d_gain>
-            <i_max>1.0</i_max>
-            <i_min>-1.0</i_min>
+            <p_gain>20.0</p_gain>
+            <i_gain>0.5</i_gain>
+            <d_gain>1.0</d_gain>
+            <i_max>5.0</i_max>
+            <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
+            <initial_position>-1.5787</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
             <joint_name>arm_link_joint</joint_name>
             <topic>/davinci_arm/arm_cmd_pos</topic>
-            <p_gain>1.0</p_gain>
-            <i_gain>0.1</i_gain>
-            <d_gain>0.01</d_gain>
-            <i_max>1.0</i_max>
-            <i_min>-1.0</i_min>
+            <p_gain>20.0</p_gain>
+            <i_gain>0.5</i_gain>
+            <d_gain>1.0</d_gain>
+            <i_max>5.0</i_max>
+            <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
+            <initial_position>0.0</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
             <joint_name>wrist_link_joint</joint_name>
             <topic>/davinci_arm/wrist_cmd_pos</topic>
-            <p_gain>1.0</p_gain>
-            <i_gain>0.1</i_gain>
-            <d_gain>0.01</d_gain>
-            <i_max>1.0</i_max>
-            <i_min>-1.0</i_min>
+            <p_gain>20.0</p_gain>
+            <i_gain>0.5</i_gain>
+            <d_gain>1.0</d_gain>
+            <i_max>5.0</i_max>
+            <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
+            <initial_position>0.0</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
             <joint_name>end_effector_link_joint</joint_name>
             <topic>/davinci_arm/end_effector_cmd_pos</topic>
-            <p_gain>1.0</p_gain>
-            <i_gain>0.1</i_gain>
-            <d_gain>0.01</d_gain>
-            <i_max>1.0</i_max>
-            <i_min>-1.0</i_min>
+            <p_gain>20.0</p_gain>
+            <i_gain>0.5</i_gain>
+            <d_gain>1.0</d_gain>
+            <i_max>5.0</i_max>
+            <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
+            <initial_position>1.5787</initial_position>
         </plugin>
 
-        <!-- Joint state publisher -->
         <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
             <topic>/davinci_arm/joint_states</topic>
             <joint_name>shoulder_link_joint</joint_name>
@@ -73,6 +76,6 @@
             <joint_name>wrist_link_joint</joint_name>
             <joint_name>end_effector_link_joint</joint_name>
         </plugin>
-    </gazebo>
 
+    </gazebo>
 </robot>

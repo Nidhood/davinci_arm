@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: davinci_arm_description
+    relative_path: models/davinci_arm_v3/urdf/davinci_arm.urdf.xacro
+  srdf:
+    relative_path: config/davinci_arm.srdf
+  package_settings:
+    author_name: Nidhood
+    author_email: ivan.oroz34@gmail.com
+    generated_timestamp: 1774990057
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

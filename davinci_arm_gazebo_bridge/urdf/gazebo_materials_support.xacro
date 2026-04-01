@@ -56,6 +56,12 @@
         <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_size_0_flange" ambient="0.101961 0.101961 0.101961 1.0" diffuse="0.101961 0.101961 0.101961 1.0"/>
         <xacro:gazebo_visual_material link_name="end_effector_link" visual_name="end_effector_link_tool_holder" ambient="0.866667 0.909804 1.0 1.0" diffuse="0.866667 0.909804 1.0 1.0"/>
 
+        <!-- marker_link -->
+        <xacro:gazebo_visual_material link_name="marker_link" visual_name="marker_body_visual" ambient="0.96 0.96 0.96 1.0" diffuse="0.96 0.96 0.96 1.0"/>
+        <xacro:gazebo_visual_material link_name="marker_link" visual_name="marker_tip_base_visual" ambient="0.82 0.82 0.82 1.0" diffuse="0.82 0.82 0.82 1.0"/>
+        <xacro:gazebo_visual_material link_name="marker_link" visual_name="marker_tip_visual" ambient="0.85 0.05 0.05 1.0" diffuse="0.85 0.05 0.05 1.0" specular="0.25 0.05 0.05 1.0"/>
+        <xacro:gazebo_visual_material link_name="marker_link" visual_name="marker_logo_visual" ambient="0.85 0.05 0.05 1.0" diffuse="0.85 0.05 0.05 1.0" specular="0.25 0.05 0.05 1.0"/>
+
     </xacro:macro>
 
 </robot>

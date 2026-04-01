@@ -54,11 +54,11 @@ install(TARGETS
 )
 
 # Install directories:
-install(DIRECTORY config launch urdf
+install(DIRECTORY config urdf
     DESTINATION share/${PROJECT_NAME}/
 )
 
-# Install pluging only if it exists:
+# Install plugin only if it exists:
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/urdf/davinci_arm_hardware_interface_plugin.xml")
     install(FILES urdf/davinci_arm_hardware_interface_plugin.xml DESTINATION share/${PROJECT_NAME})
 endif()

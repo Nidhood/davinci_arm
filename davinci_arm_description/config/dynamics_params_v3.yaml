@@ -67,6 +67,17 @@ davinci_arm_description:
         collision_origin_rpy: [1.5708, 0.0000, 0.0000]
         collision_box_size: [0.1296, 0.0914, 0.0765]
 
+      marker_link:
+        mass: 0.01
+        com_xyz: [0.00672, 0.00001, 0.00013]
+        inertia:
+          [1.329e-07, 4.182e-10, 2.253e-09, 1.1171e-05, -2.546e-10, 1.1167e-05]
+        visual_origin_xyz: [0.0, 0.0, 0.0]
+        visual_origin_rpy: [0.0, 0.0, 0.0]
+        collision_origin_xyz: [0.0, 0.0, 0.0]
+        collision_origin_rpy: [0.0, 0.0, 0.0]
+        collision_box_size: [0.13165, 0.0112, 0.01117]
+
     joints:
       shoulder_link_joint:
         damping: 0.2

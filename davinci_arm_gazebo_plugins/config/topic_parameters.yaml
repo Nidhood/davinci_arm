@@ -1,4 +1,3 @@
 topic_parameters:
   ros__parameters:
     joints_states_publisher_davinci: "/davinci_arm/joints_states"
-    

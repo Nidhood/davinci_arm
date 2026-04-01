@@ -1,0 +1,18 @@
+# MoveIt uses this configuration for controller management
+
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - davinci_arm_controller
+
+  davinci_arm_controller:
+    type: FollowJointTrajectory
+    joints:
+      - shoulder_link_joint
+      - bicep_link_joint
+      - arm_link_joint
+      - wrist_link_joint
+      - end_effector_link_joint
+    action_ns: follow_joint_trajectory
+    default: true

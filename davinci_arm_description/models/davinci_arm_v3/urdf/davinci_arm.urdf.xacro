@@ -39,6 +39,9 @@
     <!-- Joint between wrist and end effector -->
     <xacro:joint_module joint_name="end_effector_link_joint" parent="wrist_link" child="end_effector_link" xyz="-0.0430 0.0000 -0.0405" rpy="3.14159 -1.5708 0.0000" axis="0.0000 0.0000 1.0000"/>
 
+    <!-- Joint between end effector and marker -->
+    <xacro:link_module link_name="marker_link"/>
+
     <!-- Gazebo materials -->
     <xacro:include filename="$(find davinci_arm_gazebo_bridge)/urdf/gazebo_materials_support.xacro"/>
 

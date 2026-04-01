@@ -28,6 +28,18 @@
         <material name="cad_cyan">
             <color rgba="0.0 0.72549 1.0 1.0"/>
         </material>
+
+        <material name="marker_red">
+            <color rgba="0.85 0.05 0.05 1.0"/>
+        </material>
+
+        <material name="marker_white">
+            <color rgba="0.96 0.96 0.96 1.0"/>
+        </material>
+
+        <material name="marker_light_gray">
+            <color rgba="0.82 0.82 0.82 1.0"/>
+        </material>
     </xacro:macro>
 
     <!-- Reusable visual component for a single STL mesh -->
@@ -98,6 +110,11 @@
             <xacro:collision_mesh_component collision_name="end_effector_link_tool_holder_collision" mesh_file="tool_holder" xyz="-0.053 0 -0.0405" rpy="3.14159 -0.992087 -1.5708"/>
         </xacro:if>
 
+        <xacro:if value="${link_name == 'marker_link'}">
+            <xacro:collision_mesh_component collision_name="marker_body_collision" mesh_file="ExpoUltraFineBody" xyz="0 0 0" rpy="0 0 0"/>
+            <xacro:collision_mesh_component collision_name="marker_tip_base_collision" mesh_file="ExpoUltraFineTipBase" xyz="0 0 0" rpy="0 0 0"/>
+            <xacro:collision_mesh_component collision_name="marker_tip_collision" mesh_file="ExpoUltraFineTip" xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:if>
     </xacro:macro>
 
     <!-- Inertial parameters taken from YAML -->
@@ -157,6 +174,12 @@
             <xacro:mesh_component visual_name="end_effector_link_tool_holder" mesh_file="tool_holder" xyz="-0.053 0 -0.0405" rpy="3.14159 -0.992087 -1.5708" material_name="cad_light_blue"/>
         </xacro:if>
 
+        <xacro:if value="${link_name == 'marker_link'}">
+            <xacro:mesh_component visual_name="marker_body_visual" mesh_file="ExpoUltraFineBody" xyz="0 0 0" rpy="0 0 0" material_name="marker_white"/>
+            <xacro:mesh_component visual_name="marker_tip_base_visual" mesh_file="ExpoUltraFineTipBase" xyz="0 0 0" rpy="0 0 0" material_name="marker_light_gray"/>
+            <xacro:mesh_component visual_name="marker_tip_visual" mesh_file="ExpoUltraFineTip" xyz="0 0 0" rpy="0 0 0" material_name="marker_red"/>
+            <xacro:mesh_component visual_name="marker_logo_visual" mesh_file="ExpoUltraFineBrandLogoProjection037" xyz="0 0 0" rpy="0 0 0" material_name="marker_red"/>
+        </xacro:if>
     </xacro:macro>
 
     <!-- Complete logical link -->
@@ -167,6 +190,12 @@
             <xacro:inertia_from_yaml link_name="${link_name}"/>
         </link>
     </xacro:macro>
+
+    <joint name="marker_link_joint" type="fixed">
+        <parent link="end_effector_link"/>
+        <child link="marker_link"/>
+        <origin xyz="-0.063 0.000 -0.0405" rpy="3.14159 -0.992087 -1.5708"/>
+    </joint>
 
     <!-- Revolute joint parameters taken from YAML -->
     <xacro:macro name="joint_module" params="joint_name parent child xyz rpy axis">

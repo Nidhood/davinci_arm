@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Comprehensive URDF model system with visual and collision meshes
 - Advanced Gazebo simulation environment with custom world
 
-### New important command:
+### New important commands:
 
 - colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+- QT_QPA_PLATFORM=xcb ros2 launch moveit_setup_assistant setup_assistant.launch.py

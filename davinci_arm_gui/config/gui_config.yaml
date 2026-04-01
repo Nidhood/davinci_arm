@@ -1,0 +1,17 @@
+prop_arm_gui_node:
+  ros__parameters:
+    topic_ns:
+      real: "/arm"
+      sim: "/arm_sim"
+
+    topics:
+      signals:
+        angle: "angle_rad"
+        motor_speed: "motor_vel_rad"
+        pwm_feedback: "esc/pwm_us_fb"
+        angle_ref: "ref_angle_rad"
+
+      commands:
+        ref_angle: "ref_angle_rad"
+        pwm_cmd: "esc/pwm_us"
+        auto_mode: "esc/auto_mode"
