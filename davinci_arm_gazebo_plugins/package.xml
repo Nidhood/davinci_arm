@@ -2,32 +2,30 @@
 <?xml-model href="http://downloads.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
 
-    <!--- Initial package configuration -->
     <name>davinci_arm_gazebo_plugins</name>
     <version>1.0.0</version>
-    <description>Gazebo simulation for the Davinci Arm 6DOF Robot</description>
+    <description>Gazebo plugins and MoveIt adapter for the Davinci Arm</description>
+
     <maintainer email="ivan.oroz34@gmail.com">Nidhood</maintainer>
     <license>BSD-3-Clause</license>
 
-    <!-- Build tool dependencies for ament package -->
     <buildtool_depend>ament_cmake</buildtool_depend>
 
-    <!-- Core ROS2 dependencies -->
+    <depend>hardware_interface</depend>
+    <depend>pluginlib</depend>
     <depend>rclcpp</depend>
-    <depend>davinci_arm_msgs</depend>
-
-    <!-- Gazebo dependencies -->
+    <depend>rclcpp_lifecycle</depend>
     <depend>gz_ros2_control</depend>
     <depend>gz-sim8</depend>
     <depend>gz-transport13</depend>
+    <depend>gz-msgs10</depend>
 
-    <!-- Test dependencies -->
     <test_depend>ament_cmake_gtest</test_depend>
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>
 
-    <!-- Exported targets -->
     <export>
         <build_type>ament_cmake</build_type>
     </export>
+
 </package>

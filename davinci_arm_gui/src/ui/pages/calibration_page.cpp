@@ -1,13 +1,13 @@
-#include "prop_arm_gui/ui/pages/calibration_page.hpp"
+#include "davinci_arm_gui/ui/pages/calibration_page.hpp"
 
-#include "prop_arm_gui/core/services/calibration_service.hpp"
-#include "prop_arm_gui/infra/ros/limits_registry.hpp"
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
-#include "prop_arm_gui/ui/widgets/angle_plot.hpp"
-#include "prop_arm_gui/ui/widgets/arm_visualizer.hpp"
-#include "prop_arm_gui/ui/widgets/error_plot.hpp"
-#include "prop_arm_gui/ui/widgets/panel.hpp"
-#include "prop_arm_gui/ui/widgets/value_tile.hpp"
+#include "davinci_arm_gui/core/services/calibration_service.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/ui/widgets/angle_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/arm_visualizer.hpp"
+#include "davinci_arm_gui/ui/widgets/error_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/panel.hpp"
+#include "davinci_arm_gui/ui/widgets/value_tile.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>

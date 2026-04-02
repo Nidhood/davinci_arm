@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/charts/hover_interpolator.hpp"
+#include "davinci_arm_gui/core/charts/hover_interpolator.hpp"
 
 #include <algorithm>
 #include <cmath>

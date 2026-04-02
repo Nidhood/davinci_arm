@@ -1,5 +1,5 @@
-#include "prop_arm_gui/core/logging/data_exporter.hpp"
-#include "prop_arm_gui/core/models/csv_export_options.hpp"
+#include "davinci_arm_gui/core/logging/data_exporter.hpp"
+#include "davinci_arm_gui/core/models/csv_export_options.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -59,7 +59,7 @@ bool DataExporter::exportToCsv(const std::string& filename,
     const auto& first = data.front();
 
     if (opt.include_header_comments) {
-        out << "# PropArm telemetry export\n";
+        out << "# DavinciArm telemetry export\n";
         out << "# Points: " << data.size() << "\n";
         out << "# Columns: " << join_(columns, ',') << "\n";
         out << "#\n";

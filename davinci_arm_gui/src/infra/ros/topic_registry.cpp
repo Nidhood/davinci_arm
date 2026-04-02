@@ -1,4 +1,4 @@
-#include "prop_arm_gui/infra/ros/topic_registry.hpp"
+#include "davinci_arm_gui/infra/ros/topic_registry.hpp"
 
 #include <stdexcept>
 

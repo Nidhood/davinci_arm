@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/widgets/section_header.hpp"
+#include "davinci_arm_gui/ui/widgets/section_header.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>

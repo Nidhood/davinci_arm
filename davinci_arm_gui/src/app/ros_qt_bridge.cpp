@@ -1,4 +1,4 @@
-#include "prop_arm_gui/app/ros_qt_bridge.hpp"
+#include "davinci_arm_gui/app/ros_qt_bridge.hpp"
 
 #include <QCoreApplication>
 #include <QMetaObject>

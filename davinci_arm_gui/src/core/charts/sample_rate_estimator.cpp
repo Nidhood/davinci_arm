@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/charts/sample_rate_estimator.hpp"
+#include "davinci_arm_gui/core/charts/sample_rate_estimator.hpp"
 #include <algorithm>
 #include <cmath>
 

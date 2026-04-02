@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/widgets/value_tile.hpp"
+#include "davinci_arm_gui/ui/widgets/value_tile.hpp"
 
 #include <QHBoxLayout>
 #include <QLabel>

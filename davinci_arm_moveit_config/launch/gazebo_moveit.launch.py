@@ -5,7 +5,6 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -13,13 +12,20 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     launch_moveit_rviz = LaunchConfiguration('launch_moveit_rviz')
+    launch_controllers = LaunchConfiguration('launch_controllers')
 
     pkg_gz = FindPackageShare('davinci_arm_gazebo')
+    pkg_gz_plugins = FindPackageShare('davinci_arm_gazebo_plugins')
     pkg_moveit = FindPackageShare('davinci_arm_moveit_config')
 
-    # Your existing Gazebo stack
+    # Existing Gazebo stack
     start_gazebo_launch = PathJoinSubstitution([
         pkg_gz, 'launch', 'start_gazebo.launch.py'
+    ])
+
+    # Controllers launcher from gazebo plugins package
+    spawn_controllers_launch = PathJoinSubstitution([
+        pkg_gz_plugins, 'launch', 'spawn_controllers.launch.py'
     ])
 
     # Generated MoveIt launch files
@@ -30,15 +36,6 @@ def generate_launch_description():
     moveit_rviz_launch = PathJoinSubstitution([
         pkg_moveit, 'launch', 'moveit_rviz.launch.py'
     ])
-
-    # Relay current simulated joint state to the topic MoveIt expects
-    joint_states_relay = Node(
-        package='topic_tools',
-        executable='relay',
-        name='joint_states_relay',
-        arguments=['/davinci_arm/joint_states', '/joint_states'],
-        output='screen'
-    )
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -51,8 +48,13 @@ def generate_launch_description():
             default_value='true',
             description='Launch RViz with the MoveIt MotionPlanning plugin'
         ),
+        DeclareLaunchArgument(
+            'launch_controllers',
+            default_value='true',
+            description='Spawn ros2_control controllers after Gazebo starts'
+        ),
 
-        # 1) Start your existing Gazebo + robot + bridge stack:
+        # 1. Start Gazebo + robot + bridge stack
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(start_gazebo_launch),
             launch_arguments={
@@ -60,31 +62,43 @@ def generate_launch_description():
             }.items()
         ),
 
-        # 2) After Gazebo is up and publishing /davinci_arm/joint_states:
+        # 2. Spawn ros2_control controllers from gazebo_plugins package
         TimerAction(
             period=10.0,
-            actions=[joint_states_relay]
-        ),
-
-        # 3) Start move_group:
-        TimerAction(
-            period=12.0,
+            condition=IfCondition(launch_controllers),
             actions=[
                 IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource(move_group_launch),
-                    launch_arguments={'use_sim_time': 'true'}.items()
+                    PythonLaunchDescriptionSource(spawn_controllers_launch),
+                    launch_arguments={
+                        'use_sim_time': use_sim_time
+                    }.items()
                 )
             ]
         ),
 
-        # 4) Start MoveIt RViz:
+        # 3. Start move_group
         TimerAction(
             period=14.0,
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(move_group_launch),
+                    launch_arguments={
+                        'use_sim_time': use_sim_time
+                    }.items()
+                )
+            ]
+        ),
+
+        # 4. Start MoveIt RViz
+        TimerAction(
+            period=16.0,
             condition=IfCondition(launch_moveit_rviz),
-            actions=[     
+            actions=[
                 IncludeLaunchDescription(
                     PythonLaunchDescriptionSource(moveit_rviz_launch),
-                    launch_arguments={'use_sim_time': 'true'}.items()
+                    launch_arguments={
+                        'use_sim_time': use_sim_time
+                    }.items()
                 )
             ]
         ),

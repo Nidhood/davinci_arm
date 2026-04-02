@@ -1,0 +1,7 @@
+<library path="davinci_arm_moveit_adapter">
+    <class name="davinci_arm_gazebo_plugins/DavinciMoveItAdapter" type="davinci_arm_gazebo_plugins::DavinciMoveItAdapter" base_class_type="gz_ros2_control::GazeboSimSystemInterface">
+        <description>
+      MoveIt / ros2_control adapter for the Davinci Arm using Gazebo position topics.
+        </description>
+    </class>
+</library>

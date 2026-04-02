@@ -1,6 +1,6 @@
-#include "prop_arm_gui/ui/widgets/error_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/error_plot.hpp"
 
-#include "prop_arm_gui/ui/widgets/chart_base.hpp"
+#include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
 #include <QVBoxLayout>
 

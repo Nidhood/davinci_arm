@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/services/urdf_updater.hpp"
+#include "davinci_arm_gui/core/services/urdf_updater.hpp"
 
 #include <fstream>
 #include <regex>

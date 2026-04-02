@@ -1,5 +1,5 @@
-#include "prop_arm_gui/core/logging/data_recorder.hpp"
-#include "prop_arm_gui/core/models/recording_stats.hpp"
+#include "davinci_arm_gui/core/logging/data_recorder.hpp"
+#include "davinci_arm_gui/core/models/recording_stats.hpp"
 
 namespace prop_arm::core::logging {
 

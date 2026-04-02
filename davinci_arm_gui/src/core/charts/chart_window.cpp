@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/charts/chart_window.hpp"
+#include "davinci_arm_gui/core/charts/chart_window.hpp"
 
 #include <algorithm>
 #include <cmath>

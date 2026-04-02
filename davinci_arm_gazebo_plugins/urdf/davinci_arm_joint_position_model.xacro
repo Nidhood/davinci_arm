@@ -26,7 +26,7 @@
             <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
-            <initial_position>-1.5787</initial_position>
+            <initial_position>0.0</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
@@ -65,7 +65,7 @@
             <i_min>-5.0</i_min>
             <cmd_max>1000</cmd_max>
             <cmd_min>-1000</cmd_min>
-            <initial_position>1.5787</initial_position>
+            <initial_position>0.0</initial_position>
         </plugin>
 
         <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">

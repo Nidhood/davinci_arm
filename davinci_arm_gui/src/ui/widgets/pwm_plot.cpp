@@ -1,9 +1,9 @@
-#include "prop_arm_gui/ui/widgets/pwm_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/pwm_plot.hpp"
 
-#include "prop_arm_gui/core/models/domain.hpp"
-#include "prop_arm_gui/core/models/telemetry_sample.hpp"
-#include "prop_arm_gui/infra/ros/limits_registry.hpp"
-#include "prop_arm_gui/ui/widgets/chart_base.hpp"
+#include "davinci_arm_gui/core/models/domain.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
+#include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
 #include <QFrame>
 #include <QVBoxLayout>

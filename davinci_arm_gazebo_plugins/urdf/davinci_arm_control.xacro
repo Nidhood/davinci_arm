@@ -3,37 +3,55 @@
 
     <ros2_control name="GazeboSimSystem" type="system">
         <hardware>
-            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+            <plugin>davinci_arm_gazebo_plugins/DavinciMoveItAdapter</plugin>
         </hardware>
 
         <joint name="shoulder_link_joint">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="gz_topic">/davinci_arm/shoulder_cmd_pos</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
         <joint name="bicep_link_joint">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="gz_topic">/davinci_arm/bicep_cmd_pos</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
         <joint name="arm_link_joint">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="gz_topic">/davinci_arm/arm_cmd_pos</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
         <joint name="wrist_link_joint">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="gz_topic">/davinci_arm/wrist_cmd_pos</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
         <joint name="end_effector_link_joint">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="gz_topic">/davinci_arm/end_effector_cmd_pos</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
     </ros2_control>
+
+    <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find davinci_arm_moveit_config)/config/ros2_controllers.yaml</parameters>
+            <controller_manager_name>controller_manager</controller_manager_name>
+        </plugin>
+    </gazebo>
+
 </robot>

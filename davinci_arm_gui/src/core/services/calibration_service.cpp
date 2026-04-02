@@ -1,9 +1,9 @@
-#include "prop_arm_gui/core/services/calibration_service.hpp"
+#include "davinci_arm_gui/core/services/calibration_service.hpp"
 
-#include "prop_arm_gui/core/models/telemetry_store.hpp"
-#include "prop_arm_gui/core/services/calibration_optimizer.hpp"
-#include "prop_arm_gui/core/services/signal_alignment.hpp"
-#include "prop_arm_gui/core/services/urdf_updater.hpp"
+#include "davinci_arm_gui/core/models/telemetry_store.hpp"
+#include "davinci_arm_gui/core/services/calibration_optimizer.hpp"
+#include "davinci_arm_gui/core/services/signal_alignment.hpp"
+#include "davinci_arm_gui/core/services/urdf_updater.hpp"
 
 #include <algorithm>
 #include <chrono>

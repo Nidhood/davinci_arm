@@ -1,6 +1,6 @@
-#include "prop_arm_gui/infra/ros/limits_registry.hpp"
-#include "prop_arm_gui/core/models/limits_type.hpp"
-#include "prop_arm_gui/core/models/range_type.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
+#include "davinci_arm_gui/core/models/limits_type.hpp"
+#include "davinci_arm_gui/core/models/range_type.hpp"
 #include <stdexcept>
 
 namespace prop_arm::infra::ros {

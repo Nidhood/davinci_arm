@@ -2,11 +2,11 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "prop_arm_gui/app/app_context.hpp"
-#include "prop_arm_gui/app/ros_qt_bridge.hpp"
-#include "prop_arm_gui/core/models/telemetry_sample.hpp"
-#include "prop_arm_gui/core/models/theme_id.hpp"
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/app/app_context.hpp"
+#include "davinci_arm_gui/app/ros_qt_bridge.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/core/models/theme_id.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
 
 int main(int argc, char* argv[]) {
 

@@ -1,4 +1,4 @@
-prop_arm_gui_node:
+davinci_arm_gui_node:
   ros__parameters:
     limits:
       # Angle limits (degrees):

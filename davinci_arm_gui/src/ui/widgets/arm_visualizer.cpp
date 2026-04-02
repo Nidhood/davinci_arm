@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/widgets/arm_visualizer.hpp"
+#include "davinci_arm_gui/ui/widgets/arm_visualizer.hpp"
 
 #include <QPainter>
 #include <QPen>

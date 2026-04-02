@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/style/chart_theme_applier.hpp"
+#include "davinci_arm_gui/ui/style/chart_theme_applier.hpp"
 
 #include <QBrush>
 #include <QFont>

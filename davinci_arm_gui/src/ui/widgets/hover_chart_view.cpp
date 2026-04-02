@@ -1,5 +1,5 @@
 // hover_chart_view.cpp
-#include "prop_arm_gui/ui/widgets/hover_chart_view.hpp"
+#include "davinci_arm_gui/ui/widgets/hover_chart_view.hpp"
 
 #include <QChart>
 #include <QDateTime>

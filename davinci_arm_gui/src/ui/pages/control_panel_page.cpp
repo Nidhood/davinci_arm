@@ -1,14 +1,14 @@
-#include "prop_arm_gui/ui/pages/control_panel_page.hpp"
+#include "davinci_arm_gui/ui/pages/control_panel_page.hpp"
 
-#include "prop_arm_gui/core/models/csv_export_options.hpp"
-#include "prop_arm_gui/core/services/recorder_service.hpp"
-#include "prop_arm_gui/infra/ros/limits_registry.hpp"
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
-#include "prop_arm_gui/ui/widgets/angle_ref_plot.hpp"
-#include "prop_arm_gui/ui/widgets/arm_visualizer.hpp"
-#include "prop_arm_gui/ui/widgets/chart_frame.hpp"
-#include "prop_arm_gui/ui/widgets/export_preview_dialog.hpp"
-#include "prop_arm_gui/ui/widgets/tracking_error_plot.hpp"
+#include "davinci_arm_gui/core/models/csv_export_options.hpp"
+#include "davinci_arm_gui/core/services/recorder_service.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/ui/widgets/angle_ref_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/arm_visualizer.hpp"
+#include "davinci_arm_gui/ui/widgets/chart_frame.hpp"
+#include "davinci_arm_gui/ui/widgets/export_preview_dialog.hpp"
+#include "davinci_arm_gui/ui/widgets/tracking_error_plot.hpp"
 
 #include <QButtonGroup>
 #include <QDateTime>
@@ -1060,7 +1060,7 @@ void ControlPanelPage::exportRecording_() {
     for (const auto& s : recorded) samples.push_back(s);
 
     const QString default_filename =
-        QStringLiteral("proparm_recording_%1.csv")
+        QStringLiteral("DavinciArm_recording_%1.csv")
         .arg(QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss"));
 
     prop_arm::models::CsvExportOptions default_opts;

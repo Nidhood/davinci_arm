@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/widgets/chart_frame.hpp"
+#include "davinci_arm_gui/ui/widgets/chart_frame.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>

@@ -16,13 +16,13 @@ def generate_launch_description():
     limits_file = LaunchConfiguration("limits")
 
     default_config = PathJoinSubstitution([
-        FindPackageShare("prop_arm_gui"),
+        FindPackageShare("davinci_arm_gui"),
         "config",
         "gui_config.yaml",
     ])
     
     default_limits = PathJoinSubstitution([
-        FindPackageShare("prop_arm_gui"),
+        FindPackageShare("davinci_arm_gui"),
         "config",
         "limits_config.yaml",
     ])
@@ -41,9 +41,9 @@ def generate_launch_description():
         ),
 
         Node(
-            package="prop_arm_gui",
-            executable="prop_arm_gui_node",     
-            name="prop_arm_gui_node",           
+            package="davinci_arm_gui",
+            executable="davinci_arm_gui_node",     
+            name="davinci_arm_gui_node",           
             output="screen",
             parameters=[config_file, limits_file],
         ),

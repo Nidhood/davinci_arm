@@ -1,10 +1,10 @@
-#include "prop_arm_gui/app/main_window.hpp"
-#include "prop_arm_gui/core/models/domain.hpp"
-#include "prop_arm_gui/core/models/theme_id.hpp"
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
-#include "prop_arm_gui/ui/pages/calibration_page.hpp"
-#include "prop_arm_gui/ui/pages/control_panel_page.hpp"
-#include "prop_arm_gui/ui/pages/dashboard_page.hpp"
+#include "davinci_arm_gui/app/main_window.hpp"
+#include "davinci_arm_gui/core/models/domain.hpp"
+#include "davinci_arm_gui/core/models/theme_id.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/ui/pages/calibration_page.hpp"
+#include "davinci_arm_gui/ui/pages/control_panel_page.hpp"
+#include "davinci_arm_gui/ui/pages/dashboard_page.hpp"
 #include <algorithm>
 #include <QAction>
 #include <QApplication>
@@ -39,7 +39,7 @@ constexpr int kStreamStaleMs = 1000;
 } // namespace
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
-    setWindowTitle("PropArm HMI");
+    setWindowTitle("DavinciArm HMI");
     QIcon app_icon(":/icons/prop_arm_icon.png");
     if (!app_icon.isNull()) {
         setWindowIcon(app_icon);

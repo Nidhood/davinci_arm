@@ -1,7 +1,7 @@
-#include "prop_arm_gui/ui/widgets/chart_base.hpp"
+#include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
-#include "prop_arm_gui/core/charts/hover_interpolator.hpp"
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/core/charts/hover_interpolator.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
 
 #include <QBrush>
 #include <QFont>

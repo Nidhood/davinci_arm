@@ -1,4 +1,4 @@
-#include "prop_arm_gui/app/app_context.hpp"
+#include "davinci_arm_gui/app/app_context.hpp"
 
 #include <QObject>
 #include <cstdlib>     // std::getenv
@@ -28,7 +28,7 @@ std::filesystem::path AppContext::resolveWorkspacePath_() {
 }
 
 AppContext::AppContext()
-    : node_(std::make_shared<rclcpp::Node>("prop_arm_gui_node")),
+    : node_(std::make_shared<rclcpp::Node>("davinci_arm_gui_node")),
       topic_registry_(std::make_shared<prop_arm::infra::ros::TopicRegistry>(*node_)),
       limits_registry_(std::make_unique<prop_arm::infra::ros::LimitsRegistry>(*node_)),
       telemetry_(5000),
@@ -37,7 +37,7 @@ AppContext::AppContext()
       workspace_path_(resolveWorkspacePath_())
 {
     // 1) ROS bridge
-    ros_bridge_ = std::make_unique<prop_arm::infra::ros::PropArmRosBridge>(
+    ros_bridge_ = std::make_unique<prop_arm::infra::ros::DavinciArmRosBridge>(
                       node_,
                       topic_registry_,
                       &main_window_
@@ -50,7 +50,7 @@ AppContext::AppContext()
 
     // 3) Calibration core (IMPORTANT: default ctor, then inject dependencies)
     urdf_updater_ = std::make_unique<prop_arm::services::UrdfUpdater>(workspace_path_);
-    calib_sink_ = std::make_unique<prop_arm::infra::ros::PropArmRosBridgeCommandSink>(ros_bridge_.get());
+    calib_sink_ = std::make_unique<prop_arm::infra::ros::DavinciArmRosBridgeCommandSink>(ros_bridge_.get());
 
     calibration_service_ = std::make_unique<prop_arm::services::CalibrationService>(&main_window_);
     calibration_service_->setTelemetryStore(&telemetry_);
@@ -64,7 +64,7 @@ AppContext::AppContext()
     // 5) Bridge -> Store + Recorder + UI
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::telemetryUpdated,
+        &prop_arm::infra::ros::DavinciArmRosBridge::telemetryUpdated,
         &main_window_,
     [this](prop_arm::models::TelemetrySample sample) {
         telemetry_.push(sample);
@@ -77,7 +77,7 @@ AppContext::AppContext()
     // 6) Connection status -> UI
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::connectionChanged,
+        &prop_arm::infra::ros::DavinciArmRosBridge::connectionChanged,
         &main_window_,
         &prop_arm::app::MainWindow::setConnected,
         Qt::QueuedConnection
@@ -86,7 +86,7 @@ AppContext::AppContext()
     // 7) Stream live -> UI (prevents your unused-parameter warning AND fixes overlay logic)
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::streamLiveChanged,
+        &prop_arm::infra::ros::DavinciArmRosBridge::streamLiveChanged,
         &main_window_,
         &prop_arm::app::MainWindow::setStreamLive,
         Qt::QueuedConnection
@@ -97,7 +97,7 @@ AppContext::AppContext()
         &main_window_,
         &prop_arm::app::MainWindow::refAngleChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::sendRefAngle,
+        &prop_arm::infra::ros::DavinciArmRosBridge::sendRefAngle,
         Qt::QueuedConnection
     );
 
@@ -105,7 +105,7 @@ AppContext::AppContext()
         &main_window_,
         &prop_arm::app::MainWindow::pwmChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::sendPwm,
+        &prop_arm::infra::ros::DavinciArmRosBridge::sendPwm,
         Qt::QueuedConnection
     );
 
@@ -113,7 +113,7 @@ AppContext::AppContext()
         &main_window_,
         &prop_arm::app::MainWindow::autoModeChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::sendAutoMode,
+        &prop_arm::infra::ros::DavinciArmRosBridge::sendAutoMode,
         Qt::QueuedConnection
     );
 
@@ -121,7 +121,7 @@ AppContext::AppContext()
         &main_window_,
         &prop_arm::app::MainWindow::stopRequested,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::PropArmRosBridge::sendStop,
+        &prop_arm::infra::ros::DavinciArmRosBridge::sendStop,
         Qt::QueuedConnection
     );
 }

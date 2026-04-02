@@ -1,5 +1,5 @@
-#include "prop_arm_gui/ui/style/theme_manager.hpp"
-#include "prop_arm_gui/core/models/theme_id.hpp"
+#include "davinci_arm_gui/ui/style/theme_manager.hpp"
+#include "davinci_arm_gui/core/models/theme_id.hpp"
 
 #include <QApplication>
 #include <QColor>

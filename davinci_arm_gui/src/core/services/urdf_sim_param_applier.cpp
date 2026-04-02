@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/services/urdf_sim_param_applier.hpp"
+#include "davinci_arm_gui/core/services/urdf_sim_param_applier.hpp"
 
 namespace prop_arm::services {
 

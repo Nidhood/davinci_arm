@@ -1,13 +1,13 @@
-#include "prop_arm_gui/ui/pages/dashboard_page.hpp"
-#include "prop_arm_gui/core/models/domain.hpp"
-#include "prop_arm_gui/core/models/telemetry_sample.hpp"
-#include "prop_arm_gui/core/models/telemetry_store.hpp"
-#include "prop_arm_gui/infra/ros/limits_registry.hpp"
+#include "davinci_arm_gui/ui/pages/dashboard_page.hpp"
+#include "davinci_arm_gui/core/models/domain.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/core/models/telemetry_store.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 
-#include "prop_arm_gui/ui/widgets/angle_plot.hpp"
-#include "prop_arm_gui/ui/widgets/duty_plot.hpp"
-#include "prop_arm_gui/ui/widgets/pwm_plot.hpp"
-#include "prop_arm_gui/ui/widgets/speed_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/angle_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/duty_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/pwm_plot.hpp"
+#include "davinci_arm_gui/ui/widgets/speed_plot.hpp"
 
 #include <QGridLayout>
 #include <QVBoxLayout>

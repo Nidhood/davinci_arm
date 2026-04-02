@@ -1,4 +1,4 @@
-#include "prop_arm_gui/core/models/telemetry_store.hpp"
+#include "davinci_arm_gui/core/models/telemetry_store.hpp"
 
 #include <algorithm>
 #include <cmath>

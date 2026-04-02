@@ -1,6 +1,6 @@
-#include "prop_arm_gui/ui/widgets/export_preview_dialog.hpp"
+#include "davinci_arm_gui/ui/widgets/export_preview_dialog.hpp"
 
-#include "prop_arm_gui/core/logging/data_exporter.hpp"
+#include "davinci_arm_gui/core/logging/data_exporter.hpp"
 
 #include <QCheckBox>
 #include <QDoubleSpinBox>

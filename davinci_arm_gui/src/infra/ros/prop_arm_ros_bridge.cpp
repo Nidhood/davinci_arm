@@ -1,6 +1,6 @@
-#include "prop_arm_gui/infra/ros/prop_arm_ros_bridge.hpp"
-#include "prop_arm_gui/core/models/telemetry_signal_type.hpp"
-#include "prop_arm_gui/core/models/command_type.hpp"
+#include "davinci_arm_gui/infra/ros/prop_arm_ros_bridge.hpp"
+#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
+#include "davinci_arm_gui/core/models/command_type.hpp"
 
 #include <QTimer>
 #include <chrono>
@@ -12,7 +12,7 @@ using prop_arm::models::CommandType;
 using prop_arm::models::Domain;
 using prop_arm::models::TelemetrySignalType;
 
-PropArmRosBridge::PropArmRosBridge(
+DavinciArmRosBridge::DavinciArmRosBridge(
     std::shared_ptr<rclcpp::Node> node,
     std::shared_ptr<const TopicRegistry> topics,
     QObject* parent)
@@ -29,7 +29,7 @@ PropArmRosBridge::PropArmRosBridge(
     setupUiPublishTimer_();
 }
 
-prop_arm::models::TelemetrySample PropArmRosBridge::toSample_(const DomainTelemetry& t)
+prop_arm::models::TelemetrySample DavinciArmRosBridge::toSample_(const DomainTelemetry& t)
 {
     prop_arm::models::TelemetrySample s;
     s.domain = t.domain;
@@ -42,7 +42,7 @@ prop_arm::models::TelemetrySample PropArmRosBridge::toSample_(const DomainTeleme
     return s;
 }
 
-void PropArmRosBridge::setupPublishers_()
+void DavinciArmRosBridge::setupPublishers_()
 {
     auto qos_cmd = rclcpp::QoS(rclcpp::KeepLast(3))
                    .reliable()
@@ -69,7 +69,7 @@ void PropArmRosBridge::setupPublishers_()
                         topics_->topic(Domain::Sim, CommandType::AutoMode), qos_cmd);
 }
 
-void PropArmRosBridge::setupSubscribers_()
+void DavinciArmRosBridge::setupSubscribers_()
 {
     auto qos_real_sensor = rclcpp::QoS(rclcpp::KeepLast(500)).best_effort().durability_volatile();
     auto qos_real_pwm    = rclcpp::QoS(rclcpp::KeepLast(500)).best_effort().durability_volatile();
@@ -186,7 +186,7 @@ void PropArmRosBridge::setupSubscribers_()
     });
 }
 
-void PropArmRosBridge::setupConnectionTimer_()
+void DavinciArmRosBridge::setupConnectionTimer_()
 {
     conn_timer_ = node_->create_wall_timer(
                       std::chrono::milliseconds(250),
@@ -195,7 +195,7 @@ void PropArmRosBridge::setupConnectionTimer_()
     });
 }
 
-void PropArmRosBridge::setupUiPublishTimer_()
+void DavinciArmRosBridge::setupUiPublishTimer_()
 {
     ui_timer_ = new QTimer(this);
     ui_timer_->setInterval(50); // 20 Hz UI update
@@ -228,14 +228,14 @@ void PropArmRosBridge::setupUiPublishTimer_()
     ui_timer_->start();
 }
 
-void PropArmRosBridge::touchRx_(Domain d, const rclcpp::Time& now)
+void DavinciArmRosBridge::touchRx_(Domain d, const rclcpp::Time& now)
 {
     last_rx_any_ = now;
     if (d == Domain::Real) last_rx_real_ = now;
     if (d == Domain::Sim)  last_rx_sim_  = now;
 }
 
-void PropArmRosBridge::updateConnection_(const rclcpp::Time& now)
+void DavinciArmRosBridge::updateConnection_(const rclcpp::Time& now)
 {
     if (last_rx_any_.nanoseconds() == 0) {
         if (connected_) {
@@ -275,7 +275,7 @@ void PropArmRosBridge::updateConnection_(const rclcpp::Time& now)
 // Command Publishing - Broadcast to both domains
 // ============================================================================
 
-void PropArmRosBridge::sendRefAngle(double rad)
+void DavinciArmRosBridge::sendRefAngle(double rad)
 {
     std_msgs::msg::Float64 msg;
     msg.data = rad;
@@ -283,7 +283,7 @@ void PropArmRosBridge::sendRefAngle(double rad)
     publish_(pub_ref_angle_sim_, msg);
 }
 
-void PropArmRosBridge::sendPwm(std::uint16_t us)
+void DavinciArmRosBridge::sendPwm(std::uint16_t us)
 {
     std_msgs::msg::UInt16 msg;
     msg.data = us;
@@ -291,7 +291,7 @@ void PropArmRosBridge::sendPwm(std::uint16_t us)
     publish_(pub_pwm_sim_, msg);
 }
 
-void PropArmRosBridge::sendAutoMode(bool enabled)
+void DavinciArmRosBridge::sendAutoMode(bool enabled)
 {
     std_msgs::msg::Bool msg;
     msg.data = enabled;
@@ -299,7 +299,7 @@ void PropArmRosBridge::sendAutoMode(bool enabled)
     publish_(pub_auto_sim_, msg);
 }
 
-void PropArmRosBridge::sendStop()
+void DavinciArmRosBridge::sendStop()
 {
     sendAutoMode(false);
     sendPwm(0);
@@ -309,7 +309,7 @@ void PropArmRosBridge::sendStop()
 // Command Publishing - Domain-specific (for calibration)
 // ============================================================================
 
-void PropArmRosBridge::sendAngleReference(Domain domain, double rad)
+void DavinciArmRosBridge::sendAngleReference(Domain domain, double rad)
 {
     std_msgs::msg::Float64 msg;
     msg.data = rad;
@@ -321,7 +321,7 @@ void PropArmRosBridge::sendAngleReference(Domain domain, double rad)
     }
 }
 
-void PropArmRosBridge::sendPwmCommand(Domain domain, std::uint16_t us)
+void DavinciArmRosBridge::sendPwmCommand(Domain domain, std::uint16_t us)
 {
     std_msgs::msg::UInt16 msg;
     msg.data = us;
@@ -333,7 +333,7 @@ void PropArmRosBridge::sendPwmCommand(Domain domain, std::uint16_t us)
     }
 }
 
-void PropArmRosBridge::sendAutoModeCommand(Domain domain, bool enabled)
+void DavinciArmRosBridge::sendAutoModeCommand(Domain domain, bool enabled)
 {
     std_msgs::msg::Bool msg;
     msg.data = enabled;
@@ -345,7 +345,7 @@ void PropArmRosBridge::sendAutoModeCommand(Domain domain, bool enabled)
     }
 }
 
-bool PropArmRosBridge::isLive(Domain domain) const noexcept
+bool DavinciArmRosBridge::isLive(Domain domain) const noexcept
 {
     if (domain == Domain::Real) return real_live_;
     if (domain == Domain::Sim)  return sim_live_;

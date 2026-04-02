@@ -17,7 +17,7 @@ def generate_launch_description():
 
     launch_gui_arg = DeclareLaunchArgument(
         'launch_gui', default_value='true',
-        description='Launch the PropArm GUI interface'
+        description='Launch the DavinciArm GUI interface'
     )
     launch_gui = LaunchConfiguration('launch_gui')
 
@@ -57,7 +57,7 @@ def generate_launch_description():
                 launch_arguments={
                     'use_sim_time': use_sim_time,
                     'launch_state_publisher': 'true',
-                    'joint_states_topic': '/davinci_arm/joint_states'
+                    'joint_states_topic': '/joint_states'
                 }.items()
             ) ]
         ),

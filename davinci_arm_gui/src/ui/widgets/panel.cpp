@@ -1,4 +1,4 @@
-#include "prop_arm_gui/ui/widgets/panel.hpp"
+#include "davinci_arm_gui/ui/widgets/panel.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>

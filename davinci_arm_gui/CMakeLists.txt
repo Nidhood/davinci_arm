@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Project name:
-project(prop_arm_gui
+project(davinci_arm_gui
     VERSION 1.0.0
     DESCRIPTION "Propeller Arm GUI for ROS2"
     LANGUAGES CXX
@@ -37,70 +37,70 @@ set(CMAKE_AUTOUIC ON)
 
 # ----------------------- Header Files ---------------------------
 set(APP_HEADERS
-    include/prop_arm_gui/app/app_context.hpp
-    include/prop_arm_gui/app/main_window.hpp
-    include/prop_arm_gui/app/ros_qt_bridge.hpp
+    include/davinci_arm_gui/app/app_context.hpp
+    include/davinci_arm_gui/app/main_window.hpp
+    include/davinci_arm_gui/app/ros_qt_bridge.hpp
 )
 
 set(CORE_HEADERS
-    include/prop_arm_gui/core/logging/data_exporter.hpp
-    include/prop_arm_gui/core/logging/data_recorder.hpp
-    include/prop_arm_gui/core/models/calibration_state.hpp
-    include/prop_arm_gui/core/models/command_type.hpp
-    include/prop_arm_gui/core/models/control_node.hpp
-    include/prop_arm_gui/core/models/csv_export_options.hpp
-    include/prop_arm_gui/core/models/domain_buffer.hpp
-    include/prop_arm_gui/core/models/domain.hpp
-    include/prop_arm_gui/core/models/recording_state.hpp
-    include/prop_arm_gui/core/models/recording_stats.hpp
-    include/prop_arm_gui/core/models/telemetry_signal_type.hpp
-    include/prop_arm_gui/core/models/plot_signal_type.hpp
-    include/prop_arm_gui/core/models/telemetry_sample.hpp
-    include/prop_arm_gui/core/models/telemetry_store.hpp
-    include/prop_arm_gui/core/models/theme_id.hpp
-    include/prop_arm_gui/core/models/calibration_types.hpp
-    include/prop_arm_gui/core/services/recorder_service.hpp
-    include/prop_arm_gui/core/services/calibration_service.hpp
-    include/prop_arm_gui/core/services/urdf_updater.hpp
-    include/prop_arm_gui/core/services/signal_alignment.hpp
-    include/prop_arm_gui/core/services/calibration_optimizer.hpp
-    include/prop_arm_gui/core/math/units.hpp
-    include/prop_arm_gui/core/charts/chart_window.hpp
-    include/prop_arm_gui/core/charts/curve_builder.hpp
-    include/prop_arm_gui/core/charts/hover_interpolator.hpp
-    include/prop_arm_gui/core/charts/sample_rate_estimator.hpp
-    include/prop_arm_gui/core/charts/value_filter.hpp
+    include/davinci_arm_gui/core/logging/data_exporter.hpp
+    include/davinci_arm_gui/core/logging/data_recorder.hpp
+    include/davinci_arm_gui/core/models/calibration_state.hpp
+    include/davinci_arm_gui/core/models/command_type.hpp
+    include/davinci_arm_gui/core/models/control_node.hpp
+    include/davinci_arm_gui/core/models/csv_export_options.hpp
+    include/davinci_arm_gui/core/models/domain_buffer.hpp
+    include/davinci_arm_gui/core/models/domain.hpp
+    include/davinci_arm_gui/core/models/recording_state.hpp
+    include/davinci_arm_gui/core/models/recording_stats.hpp
+    include/davinci_arm_gui/core/models/telemetry_signal_type.hpp
+    include/davinci_arm_gui/core/models/plot_signal_type.hpp
+    include/davinci_arm_gui/core/models/telemetry_sample.hpp
+    include/davinci_arm_gui/core/models/telemetry_store.hpp
+    include/davinci_arm_gui/core/models/theme_id.hpp
+    include/davinci_arm_gui/core/models/calibration_types.hpp
+    include/davinci_arm_gui/core/services/recorder_service.hpp
+    include/davinci_arm_gui/core/services/calibration_service.hpp
+    include/davinci_arm_gui/core/services/urdf_updater.hpp
+    include/davinci_arm_gui/core/services/signal_alignment.hpp
+    include/davinci_arm_gui/core/services/calibration_optimizer.hpp
+    include/davinci_arm_gui/core/math/units.hpp
+    include/davinci_arm_gui/core/charts/chart_window.hpp
+    include/davinci_arm_gui/core/charts/curve_builder.hpp
+    include/davinci_arm_gui/core/charts/hover_interpolator.hpp
+    include/davinci_arm_gui/core/charts/sample_rate_estimator.hpp
+    include/davinci_arm_gui/core/charts/value_filter.hpp
 )
 
 set(INFRA_HEADERS
-    include/prop_arm_gui/infra/ros/prop_arm_ros_bridge.hpp
-    include/prop_arm_gui/infra/ros/topic_registry.hpp
-    include/prop_arm_gui/infra/ros/limits_registry.hpp
-    include/prop_arm_gui/infra/ros/prop_arm_ros_bridge_command_sink.hpp
+    include/davinci_arm_gui/infra/ros/prop_arm_ros_bridge.hpp
+    include/davinci_arm_gui/infra/ros/topic_registry.hpp
+    include/davinci_arm_gui/infra/ros/limits_registry.hpp
+    include/davinci_arm_gui/infra/ros/prop_arm_ros_bridge_command_sink.hpp
 )
 
 set(UI_HEADERS
-    include/prop_arm_gui/ui/pages/calibration_page.hpp
-    include/prop_arm_gui/ui/pages/control_panel_page.hpp
-    include/prop_arm_gui/ui/pages/dashboard_page.hpp
-    include/prop_arm_gui/ui/style/theme.hpp
-    include/prop_arm_gui/ui/style/theme_manager.hpp
-    include/prop_arm_gui/ui/widgets/chart_base.hpp
-    include/prop_arm_gui/ui/widgets/chart_frame.hpp
-    include/prop_arm_gui/ui/widgets/hover_chart_view.hpp
-    include/prop_arm_gui/ui/widgets/export_preview_dialog.hpp
-    include/prop_arm_gui/ui/widgets/panel.hpp
-    include/prop_arm_gui/ui/widgets/section_header.hpp
-    include/prop_arm_gui/ui/widgets/value_tile.hpp
-    include/prop_arm_gui/ui/style/chart_theme_applier.hpp
-    include/prop_arm_gui/ui/widgets/duty_plot.hpp
-    include/prop_arm_gui/ui/widgets/angle_plot.hpp
-    include/prop_arm_gui/ui/widgets/angle_ref_plot.hpp
-    include/prop_arm_gui/ui/widgets/error_plot.hpp
-    include/prop_arm_gui/ui/widgets/tracking_error_plot.hpp
-    include/prop_arm_gui/ui/widgets/speed_plot.hpp
-    include/prop_arm_gui/ui/widgets/pwm_plot.hpp
-    include/prop_arm_gui/ui/widgets/arm_visualizer.hpp
+    include/davinci_arm_gui/ui/pages/calibration_page.hpp
+    include/davinci_arm_gui/ui/pages/control_panel_page.hpp
+    include/davinci_arm_gui/ui/pages/dashboard_page.hpp
+    include/davinci_arm_gui/ui/style/theme.hpp
+    include/davinci_arm_gui/ui/style/theme_manager.hpp
+    include/davinci_arm_gui/ui/widgets/chart_base.hpp
+    include/davinci_arm_gui/ui/widgets/chart_frame.hpp
+    include/davinci_arm_gui/ui/widgets/hover_chart_view.hpp
+    include/davinci_arm_gui/ui/widgets/export_preview_dialog.hpp
+    include/davinci_arm_gui/ui/widgets/panel.hpp
+    include/davinci_arm_gui/ui/widgets/section_header.hpp
+    include/davinci_arm_gui/ui/widgets/value_tile.hpp
+    include/davinci_arm_gui/ui/style/chart_theme_applier.hpp
+    include/davinci_arm_gui/ui/widgets/duty_plot.hpp
+    include/davinci_arm_gui/ui/widgets/angle_plot.hpp
+    include/davinci_arm_gui/ui/widgets/angle_ref_plot.hpp
+    include/davinci_arm_gui/ui/widgets/error_plot.hpp
+    include/davinci_arm_gui/ui/widgets/tracking_error_plot.hpp
+    include/davinci_arm_gui/ui/widgets/speed_plot.hpp
+    include/davinci_arm_gui/ui/widgets/pwm_plot.hpp
+    include/davinci_arm_gui/ui/widgets/arm_visualizer.hpp
 )
 
 # ----------------------- Source Files ---------------------------
@@ -156,14 +156,14 @@ set(UI_SOURCES
     src/ui/widgets/arm_visualizer.cpp
 )
 
-qt_add_resources(PROP_ARM_GUI_RCC
+qt_add_resources(davinci_arm_gui_RCC
     resources/resources.qrc
 )
 
 # --------------------- Build executables ------------------------
 add_executable(${PROJECT_NAME}_node
     src/main.cpp
-    ${PROP_ARM_GUI_RCC}
+    ${davinci_arm_gui_RCC}
     ${APP_SOURCES}
     ${CORE_SOURCES}
     ${INFRA_SOURCES}
