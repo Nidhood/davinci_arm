@@ -1,17 +1,16 @@
 #pragma once
 
-#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
-#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
-
-#include <chrono>
 #include <cstddef>
 #include <optional>
 #include <vector>
 
-namespace prop_arm::services {
+#include "davinci_arm_gui/core/models/plot_signal_type.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+
+namespace davinci_arm::core::services {
 
 struct AlignedSignals final {
-    std::vector<double> t_sec;   // from 0..T
+    std::vector<double> t_sec;
     std::vector<double> real_y;
     std::vector<double> sim_y;
 };
@@ -27,12 +26,10 @@ struct ErrorMetrics final {
 
 class SignalAlignment final {
 public:
-    // Extract a signal from samples and resample both domains to uniform dt using linear interpolation.
-    // Returns nullopt if not enough samples.
     static std::optional<AlignedSignals> alignAndResample(
-        const std::vector<prop_arm::models::TelemetrySample>& real_samples,
-        const std::vector<prop_arm::models::TelemetrySample>& sim_samples,
-        prop_arm::models::TelemetrySignalType signal,
+        const std::vector<davinci_arm::models::TelemetrySample>& real_samples,
+        const std::vector<davinci_arm::models::TelemetrySample>& sim_samples,
+        davinci_arm::models::PlotSignalType signal,
         double dt_sec);
 
     static ErrorMetrics computeError(const AlignedSignals& a);
@@ -43,18 +40,16 @@ private:
         std::vector<double> y;
     };
 
-    static Series buildSeries_(
-        const std::vector<prop_arm::models::TelemetrySample>& samples,
-        prop_arm::models::TelemetrySignalType signal);
+    static Series buildSeries_(const std::vector<davinci_arm::models::TelemetrySample>& samples,
+                               davinci_arm::models::PlotSignalType signal);
 
-    static double sampleToValue_(
-        const prop_arm::models::TelemetrySample& s,
-        prop_arm::models::TelemetrySignalType signal);
+    static double sampleToValue_(const davinci_arm::models::TelemetrySample& s,
+                                 davinci_arm::models::PlotSignalType signal);
 
     static std::vector<double> linspace_(double t0, double t1, double dt);
     static std::vector<double> interpLinear_(const Series& s, const std::vector<double>& t_out);
-
     static double safeCorrelation_(const std::vector<double>& a, const std::vector<double>& b);
+    static double radToDeg_(double rad);
 };
 
-}  // namespace prop_arm::services
+}  // namespace davinci_arm::core::services

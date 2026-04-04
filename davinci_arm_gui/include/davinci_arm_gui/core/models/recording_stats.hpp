@@ -2,7 +2,7 @@
 
 #include "davinci_arm_gui/core/models/recording_state.hpp"
 #include <cstddef>
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 struct RecordingStats {
     std::size_t points_total = 0;
@@ -16,4 +16,4 @@ struct RecordingStats {
     models::RecordingState state = models::RecordingState::Idle;
 };
 
-} // namespace prop_arm::domain
+} // namespace davinci_arm::domain

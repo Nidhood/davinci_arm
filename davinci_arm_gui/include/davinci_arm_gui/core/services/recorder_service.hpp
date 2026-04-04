@@ -6,11 +6,10 @@
 #include <vector>
 
 #include "davinci_arm_gui/core/logging/data_recorder.hpp"
-#include "davinci_arm_gui/core/models/recording_state.hpp"
-#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 #include "davinci_arm_gui/core/models/recording_stats.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 
-namespace prop_arm::core::services {
+namespace davinci_arm::core::services {
 
 class RecorderService final {
 public:
@@ -25,29 +24,24 @@ public:
 
     [[nodiscard]] bool isRecording() const;
 
-    // Feed samples (call from AppContext telemetry fan-out)
-    void onSample(const prop_arm::models::TelemetrySample& sample);
+    void onSample(const davinci_arm::models::TelemetrySample& sample);
 
-    [[nodiscard]] std::vector<prop_arm::models::TelemetrySample> recorded() const;
-    [[nodiscard]] prop_arm::core::logging::RecordingStats stats() const;
+    [[nodiscard]] std::vector<davinci_arm::models::TelemetrySample> recorded() const;
+    [[nodiscard]] davinci_arm::models::RecordingStats stats() const;
 
     void setOnProgress(OnProgressFn cb);
     void setOnCompleted(OnCompletedFn cb);
 
 private:
-    void maybeEmitCallbacksUnlocked_(const prop_arm::core::logging::RecordingStats& st);
-
-private:
     mutable std::mutex mtx_;
-    prop_arm::core::logging::DataRecorder recorder_;
+    davinci_arm::core::logging::DataRecorder recorder_;
 
     OnProgressFn on_progress_{};
     OnCompletedFn on_completed_{};
 
-    // Guard / debouncing
-    prop_arm::core::logging::RecordingState last_state_{prop_arm::core::logging::RecordingState::Idle};
+    davinci_arm::models::RecordingState last_state_{davinci_arm::models::RecordingState::Idle};
     double last_progress_remaining_s_{-1.0};
     bool completed_emitted_{false};
 };
 
-}  // namespace prop_arm::core::services
+}  // namespace davinci_arm::core::services

@@ -11,7 +11,7 @@
 #include <optional>
 #include <vector>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 class TelemetryStore final {
 public:
@@ -106,4 +106,4 @@ private:
     std::map<Domain, DomainBuffer> buffers_;
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

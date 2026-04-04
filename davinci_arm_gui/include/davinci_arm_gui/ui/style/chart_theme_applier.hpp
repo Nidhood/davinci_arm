@@ -5,7 +5,7 @@
 #include <qlineseries.h>
 #include <qvalueaxis.h>
 
-namespace prop_arm::ui::style {
+namespace davinci_arm::ui::style {
 
 class ChartThemeApplier {
 public:
@@ -26,4 +26,4 @@ public:
 };
 
 
-} // namespace prop_arm::ui::style
+} // namespace davinci_arm::ui::style

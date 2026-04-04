@@ -1,12 +1,12 @@
 #include "davinci_arm_gui/core/charts/value_filter.hpp"
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
-double ValueFilter::filter(prop_arm::models::Domain d, double y, double dt) {
+double ValueFilter::filter(davinci_arm::models::Domain d, double y, double dt) {
     if (!std::isfinite(y)) return y;
     if (!(tau_ > 0.0) || !(dt > 0.0) || !std::isfinite(dt)) return y;
 
-    auto& st = (d == prop_arm::models::Domain::Real) ? real_ : sim_;
+    auto& st = (d == davinci_arm::models::Domain::Real) ? real_ : sim_;
 
     if (!st.has) {
         st.has = true;
@@ -24,4 +24,4 @@ void ValueFilter::reset() {
     sim_ = {};
 }
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

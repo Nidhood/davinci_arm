@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class CommandType {
     RefAngle,
@@ -8,4 +8,4 @@ enum class CommandType {
     AutoMode
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

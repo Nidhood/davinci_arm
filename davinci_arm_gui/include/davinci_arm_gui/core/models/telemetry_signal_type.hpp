@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class TelemetrySignalType {
     Angle,
@@ -9,4 +9,4 @@ enum class TelemetrySignalType {
     AngleRef
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

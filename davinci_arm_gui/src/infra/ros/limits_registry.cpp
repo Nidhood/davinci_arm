@@ -3,7 +3,7 @@
 #include "davinci_arm_gui/core/models/range_type.hpp"
 #include <stdexcept>
 
-namespace prop_arm::infra::ros {
+namespace davinci_arm::infra::ros {
 
 LimitsRegistry::LimitsRegistry(rclcpp::Node& node) {
 
@@ -87,4 +87,4 @@ const models::Limits& LimitsRegistry::limits() const noexcept {
     return limits_;
 }
 
-} // namespace prop_arm::infra::ros
+} // namespace davinci_arm::infra::ros

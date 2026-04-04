@@ -4,7 +4,7 @@
 #include <QPointF>
 #include <QVector>
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 class CurveBuilder {
 public:
@@ -22,4 +22,4 @@ private:
     int segments_{3};
 };
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

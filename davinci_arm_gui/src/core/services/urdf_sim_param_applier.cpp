@@ -1,18 +1,17 @@
 #include "davinci_arm_gui/core/services/urdf_sim_param_applier.hpp"
 
-namespace prop_arm::services {
+namespace davinci_arm::services {
 
 UrdfSimParamApplier::UrdfSimParamApplier(std::shared_ptr<UrdfUpdater> updater,
         ReloadFn reload_fn)
-    : updater_(std::move(updater)),
-      reload_fn_(std::move(reload_fn)) {}
+    : updater_(std::move(updater)), reload_fn_(std::move(reload_fn)) {}
 
-bool UrdfSimParamApplier::applyMotorParams(const prop_arm::models::MotorVelocityParams& p) {
+bool UrdfSimParamApplier::applyMotorParams(const davinci_arm::models::MotorVelocityParams& p) {
     if (!updater_) return false;
     return updater_->updateMotorParameters(p);
 }
 
-bool UrdfSimParamApplier::applyPhysicsParams(const prop_arm::models::ArmPhysicsParams& p) {
+bool UrdfSimParamApplier::applyPhysicsParams(const davinci_arm::models::ArmPhysicsParams& p) {
     if (!updater_) return false;
     return updater_->updatePhysicsParameters(p);
 }
@@ -27,4 +26,4 @@ std::optional<std::string> UrdfSimParamApplier::lastError() const noexcept {
     return updater_->getLastError();
 }
 
-}  // namespace prop_arm::services
+} // namespace davinci_arm::services

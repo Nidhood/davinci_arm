@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 DutyPlot::DutyPlot(QWidget* parent)
     : QWidget(parent) {
@@ -45,14 +45,14 @@ QWidget* DutyPlot::makeChartFrame_(QWidget* child, const char* object_name) {
     return frame;
 }
 
-std::chrono::steady_clock::time_point DutyPlot::sampleTime_(const prop_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point DutyPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void DutyPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void DutyPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
     limits_ = limits;
     applyLimits_();
 }
@@ -65,9 +65,9 @@ void DutyPlot::applyLimits_() {
     chart_->setYRange(d.min, d.max);
 }
 
-void DutyPlot::setStreamLive(prop_arm::models::Domain domain, bool live) {
+void DutyPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     if (!chart_) return;
-    if (domain == prop_arm::models::Domain::Real) chart_->setRealLive(live);
+    if (domain == davinci_arm::models::Domain::Real) chart_->setRealLive(live);
     else                                          chart_->setSimLive(live);
 }
 
@@ -92,7 +92,7 @@ double DutyPlot::dutyPercent_(std::uint16_t pwm_us) const {
     return dmin + x * (dmax - dmin);
 }
 
-void DutyPlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
+void DutyPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     if (!sample.valid || !chart_) return;
 
     const auto ts = sampleTime_(sample);
@@ -112,4 +112,4 @@ void DutyPlot::clear() {
     if (chart_) chart_->clear();
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

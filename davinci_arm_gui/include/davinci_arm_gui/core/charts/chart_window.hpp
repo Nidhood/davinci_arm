@@ -5,7 +5,7 @@
 
 #include "davinci_arm_gui/core/models/domain.hpp"
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 class ChartWindow {
 public:
@@ -22,7 +22,7 @@ public:
     void setLimits(Limits l);
 
     // Supports Real, Sim, Ref.
-    void append(double t, double y, prop_arm::models::Domain d);
+    void append(double t, double y, davinci_arm::models::Domain d);
 
     [[nodiscard]] Span span() const {
         return span_;
@@ -43,8 +43,8 @@ public:
 private:
     void enforce_();
 
-    std::deque<QPointF>& buf_(prop_arm::models::Domain d);
-    const std::deque<QPointF>& buf_(prop_arm::models::Domain d) const;
+    std::deque<QPointF>& buf_(davinci_arm::models::Domain d);
+    const std::deque<QPointF>& buf_(davinci_arm::models::Domain d) const;
 
 private:
     Limits limits_{};
@@ -54,4 +54,4 @@ private:
     Span span_{};
 };
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

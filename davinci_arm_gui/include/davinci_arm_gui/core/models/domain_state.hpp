@@ -2,7 +2,7 @@
 #include <deque>
 #include <qpoint.h>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 struct DomainRuntime {
     bool live{true};
@@ -19,4 +19,4 @@ struct DomainRuntime {
     std::deque<QPointF> buf;
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

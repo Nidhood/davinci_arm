@@ -20,7 +20,7 @@
 #include "davinci_arm_gui/ui/style/theme.hpp"
 #include "davinci_arm_gui/ui/widgets/hover_chart_view.hpp"
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 class ChartBase final : public QWidget {
     Q_OBJECT
@@ -58,7 +58,7 @@ public:
     void clear();
 
     // Real / Sim samples
-    void append(double t_sec, double y, prop_arm::models::Domain domain);
+    void append(double t_sec, double y, davinci_arm::models::Domain domain);
 
     // Reference samples
     void appendRef(double t_sec, double y);
@@ -68,7 +68,7 @@ public:
                          const QString& sim_label,
                          const QString& ref_label);
 
-    void applyTheme(const prop_arm::ui::style::ThemeSpec& spec);
+    void applyTheme(const davinci_arm::ui::style::ThemeSpec& spec);
 
 signals:
     void hoveredTextChanged(const QString& text);
@@ -141,13 +141,13 @@ private:
     bool hover_active_{false};
     QPoint hover_viewport_pos_{};
 
-    prop_arm::ui::style::ThemeSpec theme_{};
-    prop_arm::ui::style::ChartThemeApplier theme_applier_{};
+    davinci_arm::ui::style::ThemeSpec theme_{};
+    davinci_arm::ui::style::ChartThemeApplier theme_applier_{};
 
-    prop_arm::core::charts::ChartWindow window_{};
-    prop_arm::core::charts::SampleRateEstimator rate_estimator_{};
-    prop_arm::core::charts::ValueFilter value_filter_{};
-    prop_arm::core::charts::CurveBuilder curve_{};
+    davinci_arm::core::charts::ChartWindow window_{};
+    davinci_arm::core::charts::SampleRateEstimator rate_estimator_{};
+    davinci_arm::core::charts::ValueFilter value_filter_{};
+    davinci_arm::core::charts::CurveBuilder curve_{};
 
     bool auto_points_enabled_{true};
     int auto_points_counter_{0};
@@ -161,4 +161,4 @@ private:
     QString ref_label_{"Ref"};
 };
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

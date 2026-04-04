@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class RecordingState {
     Idle,
@@ -9,4 +9,4 @@ enum class RecordingState {
     Completed
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

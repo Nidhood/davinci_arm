@@ -4,7 +4,7 @@
 #include "davinci_arm_gui/core/models/limits_type.hpp"
 #include "davinci_arm_gui/core/models/range_type.hpp"
 
-namespace prop_arm::infra::ros {
+namespace davinci_arm::infra::ros {
 
 class LimitsRegistry {
 public:
@@ -23,4 +23,4 @@ private:
     models::Limits limits_;
 };
 
-} // namespace prop_arm::infra::ros
+} // namespace davinci_arm::infra::ros

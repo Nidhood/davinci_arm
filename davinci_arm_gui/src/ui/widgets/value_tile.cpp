@@ -5,7 +5,7 @@
 #include <QLocale>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 ValueTile::ValueTile(const QString& label, const QString& unit, QWidget* parent)
     : QFrame(parent),
@@ -55,4 +55,4 @@ void ValueTile::setValue(double v, int decimals) {
     value_->setText(loc.toString(v, 'f', decimals));
 }
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

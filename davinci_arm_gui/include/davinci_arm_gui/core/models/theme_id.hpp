@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class ThemeId {
     Light,
@@ -11,4 +11,4 @@ enum class ThemeId {
     CyberpunkNeon
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

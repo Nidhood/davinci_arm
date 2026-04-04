@@ -4,7 +4,7 @@
 #include <cstdlib>     // std::getenv
 #include <stdexcept>
 
-namespace prop_arm::app {
+namespace davinci_arm::app {
 
 static std::filesystem::path envPathOrEmpty(const char* key) {
     const char* v = std::getenv(key);
@@ -13,31 +13,24 @@ static std::filesystem::path envPathOrEmpty(const char* key) {
 }
 
 std::filesystem::path AppContext::resolveWorkspacePath_() {
-    // Priority:
-    // 1) PROP_ARM_WS
-    // 2) COLCON_PREFIX_PATH (best-effort fallback)
-    // 3) ~/prop_arm_ws
-    auto ws = envPathOrEmpty("PROP_ARM_WS");
+    auto ws = envPathOrEmpty("DAVINCI_ARM_WS");
     if (!ws.empty()) return ws;
-
-    // If you want: parse COLCON_PREFIX_PATH; skipping heavy parsing here.
     const auto home = envPathOrEmpty("HOME");
-    if (!home.empty()) return home / "prop_arm_ws";
-
+    if (!home.empty()) return home / "davinci_arm_ws";
     return std::filesystem::current_path();
 }
 
 AppContext::AppContext()
     : node_(std::make_shared<rclcpp::Node>("davinci_arm_gui_node")),
-      topic_registry_(std::make_shared<prop_arm::infra::ros::TopicRegistry>(*node_)),
-      limits_registry_(std::make_unique<prop_arm::infra::ros::LimitsRegistry>(*node_)),
+      topic_registry_(std::make_shared<davinci_arm::infra::ros::TopicRegistry>(*node_)),
+      limits_registry_(std::make_unique<davinci_arm::infra::ros::LimitsRegistry>(*node_)),
       telemetry_(5000),
       recorder_(),
       main_window_(nullptr),
       workspace_path_(resolveWorkspacePath_())
 {
     // 1) ROS bridge
-    ros_bridge_ = std::make_unique<prop_arm::infra::ros::DavinciArmRosBridge>(
+    ros_bridge_ = std::make_unique<davinci_arm::infra::ros::DavinciArmRosBridge>(
                       node_,
                       topic_registry_,
                       &main_window_
@@ -49,10 +42,10 @@ AppContext::AppContext()
     main_window_.setRecorderService(&recorder_);
 
     // 3) Calibration core (IMPORTANT: default ctor, then inject dependencies)
-    urdf_updater_ = std::make_unique<prop_arm::services::UrdfUpdater>(workspace_path_);
-    calib_sink_ = std::make_unique<prop_arm::infra::ros::DavinciArmRosBridgeCommandSink>(ros_bridge_.get());
+    urdf_updater_ = std::make_unique<davinci_arm::services::UrdfUpdater>(workspace_path_);
+    calib_sink_ = std::make_unique<davinci_arm::infra::ros::DavinciArmRosBridgeCommandSink>(ros_bridge_.get());
 
-    calibration_service_ = std::make_unique<prop_arm::services::CalibrationService>(&main_window_);
+    calibration_service_ = std::make_unique<davinci_arm::services::CalibrationService>(&main_window_);
     calibration_service_->setTelemetryStore(&telemetry_);
     calibration_service_->setCommandSink(calib_sink_.get());
     calibration_service_->setUrdfUpdater(urdf_updater_.get());
@@ -64,9 +57,9 @@ AppContext::AppContext()
     // 5) Bridge -> Store + Recorder + UI
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::telemetryUpdated,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::telemetryUpdated,
         &main_window_,
-    [this](prop_arm::models::TelemetrySample sample) {
+    [this](davinci_arm::models::TelemetrySample sample) {
         telemetry_.push(sample);
         recorder_.onSample(sample);
         main_window_.onTelemetry(sample);
@@ -77,51 +70,51 @@ AppContext::AppContext()
     // 6) Connection status -> UI
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::connectionChanged,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::connectionChanged,
         &main_window_,
-        &prop_arm::app::MainWindow::setConnected,
+        &davinci_arm::app::MainWindow::setConnected,
         Qt::QueuedConnection
     );
 
     // 7) Stream live -> UI (prevents your unused-parameter warning AND fixes overlay logic)
     QObject::connect(
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::streamLiveChanged,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::streamLiveChanged,
         &main_window_,
-        &prop_arm::app::MainWindow::setStreamLive,
+        &davinci_arm::app::MainWindow::setStreamLive,
         Qt::QueuedConnection
     );
 
     // 8) UI commands -> Bridge publishers (broadcast commands)
     QObject::connect(
         &main_window_,
-        &prop_arm::app::MainWindow::refAngleChanged,
+        &davinci_arm::app::MainWindow::refAngleChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::sendRefAngle,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::sendRefAngle,
         Qt::QueuedConnection
     );
 
     QObject::connect(
         &main_window_,
-        &prop_arm::app::MainWindow::pwmChanged,
+        &davinci_arm::app::MainWindow::pwmChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::sendPwm,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::sendPwm,
         Qt::QueuedConnection
     );
 
     QObject::connect(
         &main_window_,
-        &prop_arm::app::MainWindow::autoModeChanged,
+        &davinci_arm::app::MainWindow::autoModeChanged,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::sendAutoMode,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::sendAutoMode,
         Qt::QueuedConnection
     );
 
     QObject::connect(
         &main_window_,
-        &prop_arm::app::MainWindow::stopRequested,
+        &davinci_arm::app::MainWindow::stopRequested,
         ros_bridge_.get(),
-        &prop_arm::infra::ros::DavinciArmRosBridge::sendStop,
+        &davinci_arm::infra::ros::DavinciArmRosBridge::sendStop,
         Qt::QueuedConnection
     );
 }
@@ -150,4 +143,4 @@ rclcpp::Node::SharedPtr AppContext::node() const noexcept {
     return node_;
 }
 
-} // namespace prop_arm::app
+} // namespace davinci_arm::app

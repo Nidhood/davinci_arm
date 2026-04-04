@@ -4,7 +4,7 @@
 #include <cmath>
 #include <thread>
 
-namespace prop_arm::infra::ros {
+namespace davinci_arm::infra::ros {
 
 namespace {
 
@@ -16,7 +16,7 @@ std::uint16_t clampPwm(double v) {
 }  // namespace
 
 StepCalibrationCommander::StepCalibrationCommander(
-    std::shared_ptr<prop_arm::models::TelemetryStore> store,
+    std::shared_ptr<davinci_arm::models::TelemetryStore> store,
     std::shared_ptr<ICalibrationCommandSink> sink)
     : store_(std::move(store)),
       sink_(std::move(sink)) {}
@@ -91,18 +91,18 @@ bool StepCalibrationCommander::sleepOrStop_(std::chrono::duration<double> d, std
 }
 
 void StepCalibrationCommander::clearTelemetry_() const {
-    store_->clearDomain(prop_arm::models::Domain::Real);
-    store_->clearDomain(prop_arm::models::Domain::Sim);
+    store_->clearDomain(davinci_arm::models::Domain::Real);
+    store_->clearDomain(davinci_arm::models::Domain::Sim);
 }
 
 void StepCalibrationCommander::broadcastPwm_(std::uint16_t pwm_us) const {
-    sink_->sendPwmUs(prop_arm::models::Domain::Real, pwm_us);
-    sink_->sendPwmUs(prop_arm::models::Domain::Sim, pwm_us);
+    sink_->sendPwmUs(davinci_arm::models::Domain::Real, pwm_us);
+    sink_->sendPwmUs(davinci_arm::models::Domain::Sim, pwm_us);
 }
 
 void StepCalibrationCommander::broadcastRefAngle_(double rad) const {
-    sink_->sendRefAngleRad(prop_arm::models::Domain::Real, rad);
-    sink_->sendRefAngleRad(prop_arm::models::Domain::Sim, rad);
+    sink_->sendRefAngleRad(davinci_arm::models::Domain::Real, rad);
+    sink_->sendRefAngleRad(davinci_arm::models::Domain::Sim, rad);
 }
 
-}  // namespace prop_arm::infra::ros
+}  // namespace davinci_arm::infra::ros

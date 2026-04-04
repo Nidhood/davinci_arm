@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 namespace {
 constexpr double kTiny = 1e-12;
@@ -38,4 +38,4 @@ std::optional<QPointF> HoverInterpolator::yAt(const std::deque<QPointF>& buf, do
     return QPointF(t, v1 + a * (v2 - v1));
 }
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

@@ -9,7 +9,7 @@
 #include <QFrame>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 AnglePlot::AnglePlot(QWidget* parent)
     : QWidget(parent) {
@@ -17,12 +17,17 @@ AnglePlot::AnglePlot(QWidget* parent)
     root_->setContentsMargins(0, 0, 0, 0);
     root_->setSpacing(0);
 
-    chart_ = new ChartBase("Arm angle", "deg", this);
+    chart_ = new ChartBase("", "deg", this);
+    chart_->setSeriesLabels("Real", "Sim", "Ref");
     chart_->setShowSim(true);
+    chart_->setShowRef(true);
     chart_->setIntegerYAxis(false);
     chart_->setAutoRange(false);
     chart_->setWindowSeconds(30.0);
     chart_->setMaxPoints(2200);
+    chart_->setRealLive(false);
+    chart_->setSimLive(false);
+    chart_->setRefLive(false);
 
     frame_ = static_cast<QFrame*>(makeChartFrame_(chart_, "rtpChartFrame"));
     root_->addWidget(frame_, 1);
@@ -33,22 +38,21 @@ QWidget* AnglePlot::makeChartFrame_(QWidget* child, const char* object_name) {
     frame->setObjectName(object_name);
     frame->setFrameShape(QFrame::NoFrame);
 
-    auto* l = new QVBoxLayout(frame);
-    l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(0);
-    l->addWidget(child, 1);
-
+    auto* layout = new QVBoxLayout(frame);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    layout->addWidget(child, 1);
     return frame;
 }
 
-std::chrono::steady_clock::time_point AnglePlot::sampleTime_(const prop_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point AnglePlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void AnglePlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void AnglePlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
     limits_ = limits;
     if (limits_ && chart_) {
         const auto& r = limits_->angleLimits();
@@ -56,14 +60,24 @@ void AnglePlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* li
     }
 }
 
-void AnglePlot::setStreamLive(prop_arm::models::Domain domain, bool live) {
-    if (!chart_) return;
-    if (domain == prop_arm::models::Domain::Real) chart_->setRealLive(live);
-    else                                          chart_->setSimLive(live);
+void AnglePlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+    if (!chart_) {
+        return;
+    }
+
+    if (domain == davinci_arm::models::Domain::Real) {
+        chart_->setRealLive(live);
+    } else if (domain == davinci_arm::models::Domain::Sim) {
+        chart_->setSimLive(live);
+    } else if (domain == davinci_arm::models::Domain::Ref) {
+        chart_->setRefLive(live);
+    }
 }
 
-void AnglePlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
-    if (!sample.valid || !chart_) return;
+void AnglePlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
+    if (!sample.valid || !chart_) {
+        return;
+    }
 
     const auto ts = sampleTime_(sample);
     if (!have_t0_) {
@@ -72,14 +86,22 @@ void AnglePlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
     }
 
     const double t_sec = std::chrono::duration<double>(ts - t0_).count();
-    const double deg = prop_arm::core::math::rad_to_deg(sample.arm_angle_rad);
+    const double angle_deg = davinci_arm::core::math::rad_to_deg(sample.arm_angle_rad);
+    const double ref_deg = davinci_arm::core::math::rad_to_deg(sample.ref_angle_rad);
 
-    chart_->append(t_sec, deg, sample.domain);
+    if (sample.domain == davinci_arm::models::Domain::Real ||
+            sample.domain == davinci_arm::models::Domain::Sim) {
+        chart_->append(t_sec, angle_deg, sample.domain);
+    }
+
+    chart_->appendRef(t_sec, ref_deg);
 }
 
 void AnglePlot::clear() {
     have_t0_ = false;
-    if (chart_) chart_->clear();
+    if (chart_) {
+        chart_->clear();
+    }
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

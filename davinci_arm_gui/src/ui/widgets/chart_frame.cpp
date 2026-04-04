@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 ChartFrame::ChartFrame(QWidget* parent)
     : QFrame(parent),
@@ -64,4 +64,4 @@ void ChartFrame::setChartWidget(QWidget* w) {
     root_->addWidget(chart_, 1);
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

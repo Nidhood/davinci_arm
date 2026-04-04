@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 # Project name:
 project(davinci_arm_gui
     VERSION 1.0.0
-    DESCRIPTION "Propeller Arm GUI for ROS2"
+    DESCRIPTION "Davinci Arm GUI for ROS2"
     LANGUAGES CXX
 )
 
@@ -11,6 +11,7 @@ project(davinci_arm_gui
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Compiler options:
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -26,6 +27,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 
 # Find Qt6 dependencies
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Charts Svg)
@@ -59,11 +61,15 @@ set(CORE_HEADERS
     include/davinci_arm_gui/core/models/telemetry_store.hpp
     include/davinci_arm_gui/core/models/theme_id.hpp
     include/davinci_arm_gui/core/models/calibration_types.hpp
+    include/davinci_arm_gui/core/models/drawing_types.hpp
+    include/davinci_arm_gui/core/models/calibration_interfaces.hpp
     include/davinci_arm_gui/core/services/recorder_service.hpp
     include/davinci_arm_gui/core/services/calibration_service.hpp
     include/davinci_arm_gui/core/services/urdf_updater.hpp
     include/davinci_arm_gui/core/services/signal_alignment.hpp
     include/davinci_arm_gui/core/services/calibration_optimizer.hpp
+    include/davinci_arm_gui/core/services/drawing_service.hpp
+    include/davinci_arm_gui/core/services/drawing_interfaces.hpp
     include/davinci_arm_gui/core/math/units.hpp
     include/davinci_arm_gui/core/charts/chart_window.hpp
     include/davinci_arm_gui/core/charts/curve_builder.hpp
@@ -73,16 +79,17 @@ set(CORE_HEADERS
 )
 
 set(INFRA_HEADERS
-    include/davinci_arm_gui/infra/ros/prop_arm_ros_bridge.hpp
+    include/davinci_arm_gui/infra/ros/davinci_arm_ros_bridge.hpp
     include/davinci_arm_gui/infra/ros/topic_registry.hpp
     include/davinci_arm_gui/infra/ros/limits_registry.hpp
-    include/davinci_arm_gui/infra/ros/prop_arm_ros_bridge_command_sink.hpp
+    include/davinci_arm_gui/infra/ros/davinci_arm_ros_bridge_command_sink.hpp
 )
 
 set(UI_HEADERS
     include/davinci_arm_gui/ui/pages/calibration_page.hpp
     include/davinci_arm_gui/ui/pages/control_panel_page.hpp
     include/davinci_arm_gui/ui/pages/dashboard_page.hpp
+    include/davinci_arm_gui/ui/pages/drawing_page.hpp
     include/davinci_arm_gui/ui/style/theme.hpp
     include/davinci_arm_gui/ui/style/theme_manager.hpp
     include/davinci_arm_gui/ui/widgets/chart_base.hpp
@@ -119,6 +126,7 @@ set(CORE_SOURCES
     src/core/services/urdf_updater.cpp
     src/core/services/signal_alignment.cpp
     src/core/services/calibration_optimizer.cpp
+    src/core/services/drawing_service.cpp
     src/core/charts/chart_window.cpp
     src/core/charts/curve_builder.cpp
     src/core/charts/hover_interpolator.cpp
@@ -128,16 +136,17 @@ set(CORE_SOURCES
 )
 
 set(INFRA_SOURCES
-    src/infra/ros/prop_arm_ros_bridge.cpp
+    src/infra/ros/davinci_arm_ros_bridge.cpp
     src/infra/ros/topic_registry.cpp
     src/infra/ros/limits_registry.cpp
-    src/infra/ros/prop_arm_ros_bridge_command_sink.cpp
+    src/infra/ros/davinci_arm_ros_bridge_command_sink.cpp
 )
 
 set(UI_SOURCES
     src/ui/pages/calibration_page.cpp
     src/ui/pages/control_panel_page.cpp
     src/ui/pages/dashboard_page.cpp
+    src/ui/pages/drawing_page.cpp
     src/ui/style/theme_manager.cpp
     src/ui/widgets/chart_base.cpp
     src/ui/widgets/chart_frame.cpp
@@ -185,6 +194,7 @@ target_include_directories(${PROJECT_NAME}_node
 ament_target_dependencies(${PROJECT_NAME}_node
     rclcpp
     std_msgs
+    control_msgs
 )
 
 target_link_libraries(${PROJECT_NAME}_node

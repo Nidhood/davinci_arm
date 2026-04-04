@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numeric>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 TelemetryStore::TelemetryStore(std::size_t max_history)
     : max_history_(std::max<std::size_t>(1, max_history))
@@ -307,4 +307,4 @@ double TelemetryStore::extractSignalValue_(
     }
 }
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

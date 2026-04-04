@@ -8,7 +8,7 @@
 #include <QMargins>
 #include <QGraphicsLayout>
 
-namespace prop_arm::ui::style {
+namespace davinci_arm::ui::style {
 
 void ChartThemeApplier::apply(QChart& chart,
                               QLegend* legend,
@@ -142,4 +142,4 @@ void ChartThemeApplier::apply(QChart& chart,
     }
 }
 
-} // namespace prop_arm::ui::style
+} // namespace davinci_arm::ui::style

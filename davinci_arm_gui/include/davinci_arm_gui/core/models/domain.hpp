@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class Domain {
     Real,
@@ -8,4 +8,4 @@ enum class Domain {
     Ref
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

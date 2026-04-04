@@ -8,7 +8,7 @@
 #include <atomic>
 #include <thread>
 
-namespace prop_arm::app {
+namespace davinci_arm::app {
 
 class RosQtBridge final {
 public:
@@ -32,4 +32,4 @@ private:
     std::thread sigint_watcher_;
 };
 
-}  // namespace prop_arm::app
+}  // namespace davinci_arm::app

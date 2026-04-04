@@ -5,7 +5,7 @@
 
 class QLabel;
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 class ValueTile final : public QFrame {
     Q_OBJECT
@@ -28,4 +28,4 @@ private:
     QLabel* unit_;
 };
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

@@ -5,7 +5,7 @@
 class QLabel;
 class QVBoxLayout;
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 class ChartFrame final : public QFrame {
     Q_OBJECT
@@ -22,4 +22,4 @@ private:
     QWidget* chart_{nullptr};
 };
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

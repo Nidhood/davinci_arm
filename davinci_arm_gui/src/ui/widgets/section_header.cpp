@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 SectionHeader::SectionHeader(const QString& title, const QString& subtitle, QWidget* parent)
     : QWidget(parent),
@@ -36,4 +36,4 @@ void SectionHeader::setSubtitle(const QString& subtitle) {
     subtitle_->setVisible(!subtitle.isEmpty());
 }
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

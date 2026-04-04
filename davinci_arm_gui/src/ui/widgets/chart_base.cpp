@@ -14,7 +14,7 @@
 #include <cmath>
 #include <limits>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 namespace {
 constexpr double kTiny = 1e-12;
@@ -43,8 +43,8 @@ ChartBase::ChartBase(const QString& title,
     window_.setLimits({window_s_, max_points_});
 
     curve_.setMode(smooth_curves_
-                   ? prop_arm::core::charts::CurveBuilder::Mode::MonotoneCubic
-                   : prop_arm::core::charts::CurveBuilder::Mode::Raw);
+                   ? davinci_arm::core::charts::CurveBuilder::Mode::MonotoneCubic
+                   : davinci_arm::core::charts::CurveBuilder::Mode::Raw);
     curve_.setSegmentsPerInterval(segments_per_interval_);
 
     value_filter_.setTau(lp_tau_s_);
@@ -56,13 +56,13 @@ ChartBase::ChartBase(const QString& title,
     connect(update_timer_, &QTimer::timeout, this, &ChartBase::onUpdateTimer_);
     update_timer_->start();
 
-    auto& tm = prop_arm::ui::style::ThemeManager::instance();
+    auto& tm = davinci_arm::ui::style::ThemeManager::instance();
     applyTheme(tm.currentSpec());
     connect(&tm,
-            &prop_arm::ui::style::ThemeManager::themeChanged,
+            &davinci_arm::ui::style::ThemeManager::themeChanged,
             this,
     [this](auto) {
-        applyTheme(prop_arm::ui::style::ThemeManager::instance().currentSpec());
+        applyTheme(davinci_arm::ui::style::ThemeManager::instance().currentSpec());
     });
 
     auto_points_enabled_ = true;
@@ -187,7 +187,7 @@ void ChartBase::updateLegend_() {
     }
 }
 
-void ChartBase::applyTheme(const prop_arm::ui::style::ThemeSpec& spec) {
+void ChartBase::applyTheme(const davinci_arm::ui::style::ThemeSpec& spec) {
     theme_ = spec;
 
     theme_applier_.apply(*chart_,
@@ -268,8 +268,8 @@ void ChartBase::setSmoothCurves(bool enabled) {
     smooth_curves_ = enabled;
 
     curve_.setMode(smooth_curves_
-                   ? prop_arm::core::charts::CurveBuilder::Mode::MonotoneCubic
-                   : prop_arm::core::charts::CurveBuilder::Mode::Raw);
+                   ? davinci_arm::core::charts::CurveBuilder::Mode::MonotoneCubic
+                   : davinci_arm::core::charts::CurveBuilder::Mode::Raw);
 
     rebuildSeries_();
     applyTheme(theme_);
@@ -304,12 +304,12 @@ void ChartBase::clear() {
     updateLegend_();
 }
 
-void ChartBase::append(double t_sec, double y_val, prop_arm::models::Domain domain) {
+void ChartBase::append(double t_sec, double y_val, davinci_arm::models::Domain domain) {
     if (!std::isfinite(t_sec) || !std::isfinite(y_val)) return;
 
-    if (domain == prop_arm::models::Domain::Ref) {
+    if (domain == davinci_arm::models::Domain::Ref) {
         rate_estimator_.observe(domain, t_sec);
-        window_.append(t_sec, y_val, prop_arm::models::Domain::Ref);
+        window_.append(t_sec, y_val, davinci_arm::models::Domain::Ref);
         ref_live_ = true;
         needs_update_ = true;
         return;
@@ -328,8 +328,8 @@ void ChartBase::append(double t_sec, double y_val, prop_arm::models::Domain doma
 void ChartBase::appendRef(double t_sec, double y_val) {
     if (!std::isfinite(t_sec) || !std::isfinite(y_val)) return;
 
-    rate_estimator_.observe(prop_arm::models::Domain::Ref, t_sec);
-    window_.append(t_sec, y_val, prop_arm::models::Domain::Ref);
+    rate_estimator_.observe(davinci_arm::models::Domain::Ref, t_sec);
+    window_.append(t_sec, y_val, davinci_arm::models::Domain::Ref);
 
     ref_live_ = true;
     needs_update_ = true;
@@ -344,14 +344,14 @@ void ChartBase::onUpdateTimer_() {
             auto_points_counter_ = 0;
 
             std::optional<double> dt;
-            if (real_live_) dt = rate_estimator_.dtEma(prop_arm::models::Domain::Real);
+            if (real_live_) dt = rate_estimator_.dtEma(davinci_arm::models::Domain::Real);
             if (!dt.has_value() && show_sim_ && sim_live_)
-                dt = rate_estimator_.dtEma(prop_arm::models::Domain::Sim);
+                dt = rate_estimator_.dtEma(davinci_arm::models::Domain::Sim);
             if (!dt.has_value() && show_ref_ && ref_live_)
-                dt = rate_estimator_.dtEma(prop_arm::models::Domain::Ref);
+                dt = rate_estimator_.dtEma(davinci_arm::models::Domain::Ref);
 
             if (dt.has_value() && dt.value() > 0.0) {
-                int new_max = prop_arm::core::charts::SampleRateEstimator::recommendedMaxPoints(window_s_, dt.value());
+                int new_max = davinci_arm::core::charts::SampleRateEstimator::recommendedMaxPoints(window_s_, dt.value());
                 new_max = clampi(new_max, kMinPoints, kMaxPointsCap);
 
                 if (std::abs(new_max - max_points_) > std::max(200, max_points_ / 5)) {
@@ -492,9 +492,9 @@ void ChartBase::updateHoverDisplay_() {
 
     const double t_abs = hover_value.x();
 
-    const auto r = prop_arm::core::charts::HoverInterpolator::yAt(window_.real(), t_abs);
-    const auto s = show_sim_ ? prop_arm::core::charts::HoverInterpolator::yAt(window_.sim(), t_abs) : std::nullopt;
-    const auto f = show_ref_ ? prop_arm::core::charts::HoverInterpolator::yAt(window_.ref(), t_abs) : std::nullopt;
+    const auto r = davinci_arm::core::charts::HoverInterpolator::yAt(window_.real(), t_abs);
+    const auto s = show_sim_ ? davinci_arm::core::charts::HoverInterpolator::yAt(window_.sim(), t_abs) : std::nullopt;
+    const auto f = show_ref_ ? davinci_arm::core::charts::HoverInterpolator::yAt(window_.ref(), t_abs) : std::nullopt;
 
     const bool show_real = r.has_value() && real_live_ && !real_label_.isEmpty();
     const bool show_sim_val = s.has_value() && show_sim_ && sim_live_ && !sim_label_.isEmpty();
@@ -673,4 +673,4 @@ void ChartBase::setIntegerYAxis(bool enabled) {
     onUpdateTimer_();
 }
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

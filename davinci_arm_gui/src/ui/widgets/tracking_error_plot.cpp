@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <numbers>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 TrackingErrorPlot::TrackingErrorPlot(QWidget* parent)
     : QWidget(parent) {
@@ -30,14 +30,14 @@ TrackingErrorPlot::TrackingErrorPlot(QWidget* parent)
     root->addWidget(chart_, 1);
 }
 
-std::chrono::steady_clock::time_point TrackingErrorPlot::sampleTime_(const prop_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point TrackingErrorPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void TrackingErrorPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void TrackingErrorPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
     limits_ = limits;
     applyLimits_();
 }
@@ -50,7 +50,7 @@ void TrackingErrorPlot::applyLimits_() {
     chart_->setYRange(r.min, r.max);
 }
 
-void TrackingErrorPlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
+void TrackingErrorPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     if (!chart_ || !sample.valid) return;
 
     const auto ts = sampleTime_(sample);
@@ -68,9 +68,9 @@ void TrackingErrorPlot::pushSample(const prop_arm::models::TelemetrySample& samp
     chart_->append(t_sec, err_deg, sample.domain);
 }
 
-void TrackingErrorPlot::setStreamLive(prop_arm::models::Domain domain, bool live) {
+void TrackingErrorPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     if (!chart_) return;
-    if (domain == prop_arm::models::Domain::Real) chart_->setRealLive(live);
+    if (domain == davinci_arm::models::Domain::Real) chart_->setRealLive(live);
     else                                          chart_->setSimLive(live);
 }
 
@@ -79,4 +79,4 @@ void TrackingErrorPlot::clear() {
     if (chart_) chart_->clear();
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

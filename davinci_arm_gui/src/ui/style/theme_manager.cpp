@@ -7,7 +7,7 @@
 #include <QPalette>
 #include <QTextStream>
 
-namespace prop_arm::ui::style {
+namespace davinci_arm::ui::style {
 
 ThemeManager& ThemeManager::instance() {
     static ThemeManager inst;
@@ -177,4 +177,4 @@ QPalette ThemeManager::buildPalette_(const ThemeSpec& spec) {
     return p;
 }
 
-} // namespace prop_arm::ui::style
+} // namespace davinci_arm::ui::style

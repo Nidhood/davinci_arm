@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 template <typename T>
 struct Range {
@@ -37,5 +37,5 @@ struct Range {
     }
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models
 

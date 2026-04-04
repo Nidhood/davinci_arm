@@ -5,7 +5,7 @@
 #include <chrono>
 #include <cstdint>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 struct TelemetrySample {
     Domain domain{Domain::Real};
@@ -20,4 +20,4 @@ struct TelemetrySample {
     bool operator==(const TelemetrySample&) const noexcept = default;
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

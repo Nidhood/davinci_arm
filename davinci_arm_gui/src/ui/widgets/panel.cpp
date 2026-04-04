@@ -3,16 +3,17 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 Panel::Panel(const QString& title, QWidget* parent)
     : QFrame(parent),
       title_(new QLabel(this)),
       root_(new QVBoxLayout(this)),
       body_(new QVBoxLayout()) {
-
     setObjectName("panel");
     setFrameShape(QFrame::NoFrame);
+    setAttribute(Qt::WA_StyledBackground, true);
+    setAutoFillBackground(false);
 
     root_->setContentsMargins(12, 12, 12, 12);
     root_->setSpacing(10);
@@ -34,4 +35,4 @@ QString Panel::title() const {
     return title_->text();
 }
 
-} // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

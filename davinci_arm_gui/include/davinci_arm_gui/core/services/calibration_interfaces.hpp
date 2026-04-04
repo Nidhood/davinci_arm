@@ -1,44 +1,69 @@
 #pragma once
 
 #include "davinci_arm_gui/core/models/calibration_types.hpp"
+#include "davinci_arm_gui/core/models/domain.hpp"
 
+#include <optional>
 #include <stop_token>
+#include <string>
 #include <vector>
 
-namespace prop_arm::services {
+namespace davinci_arm::services {
 
-// Responsible for applying candidate parameters to the simulator (URDF/xacro, ROS params, reload, etc.)
+class ISimReloadHook {
+public:
+    virtual ~ISimReloadHook() = default;
+    virtual bool reloadSimulation() = 0;
+};
+
 class ISimParamApplier {
 public:
     virtual ~ISimParamApplier() = default;
 
-    virtual bool applyMotorParams(const prop_arm::models::MotorVelocityParams& p) = 0;
-    virtual bool applyPhysicsParams(const prop_arm::models::ArmPhysicsParams& p) = 0;
-
-    // Optional: if your sim needs a "reload/restart" after modifying URDF
+    virtual bool applyMotorParams(const davinci_arm::models::MotorVelocityParams& p) = 0;
+    virtual bool applyPhysicsParams(const davinci_arm::models::ArmPhysicsParams& p) = 0;
     virtual bool reloadSimulation() = 0;
+    [[nodiscard]] virtual std::optional<std::string> lastError() const noexcept = 0;
 };
 
-// Responsible for running the *same* excitation on Real and Sim.
-// Implementation typically publishes reference commands to both domains (or a shared command topic).
 class ICalibrationCommander {
 public:
     virtual ~ICalibrationCommander() = default;
 
-    // MotorVelocity calibration: command a PWM sequence and block until done.
-    // Must return true if completed without interruption.
     virtual bool runMotorSequence(
         const std::vector<double>& pwm_steps,
         double step_duration_sec,
         double settling_time_sec,
-        std::stop_token st) = 0;
+        std::stop_token st,
+        bool use_real,
+        bool use_sim) = 0;
 
-    // ArmPhysics calibration: command an angle reference (or other trajectory) sequence and block until done.
     virtual bool runPhysicsSequence(
         const std::vector<double>& ref_steps_rad,
         double step_duration_sec,
         double settling_time_sec,
-        std::stop_token st) = 0;
+        std::stop_token st,
+        bool use_real,
+        bool use_sim) = 0;
+
+    virtual void stopAll() = 0;
 };
 
-}  // namespace prop_arm::services
+class IRobotPoseProvider {
+public:
+    virtual ~IRobotPoseProvider() = default;
+
+    [[nodiscard]] virtual std::optional<davinci_arm::models::CartesianPose>
+    currentToolPose(davinci_arm::models::Domain domain) const = 0;
+};
+
+class IWorkspacePersistence {
+public:
+    virtual ~IWorkspacePersistence() = default;
+
+    virtual bool saveWorkspace(const davinci_arm::models::DrawingWorkspaceCalibration& workspace) = 0;
+    [[nodiscard]] virtual std::optional<davinci_arm::models::DrawingWorkspaceCalibration> loadWorkspace() const = 0;
+    [[nodiscard]] virtual std::optional<std::string> lastError() const noexcept = 0;
+};
+
+} // namespace davinci_arm::services

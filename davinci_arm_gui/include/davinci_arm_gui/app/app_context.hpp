@@ -10,17 +10,16 @@
 #include "davinci_arm_gui/core/services/calibration_service.hpp"
 #include "davinci_arm_gui/core/services/urdf_updater.hpp"
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
-#include "davinci_arm_gui/infra/ros/prop_arm_ros_bridge.hpp"
+#include "davinci_arm_gui/infra/ros/davinci_arm_ros_bridge.hpp"
 #include "davinci_arm_gui/infra/ros/topic_registry.hpp"
-#include "davinci_arm_gui/infra/ros/prop_arm_ros_bridge_command_sink.hpp"
+#include "davinci_arm_gui/infra/ros/davinci_arm_ros_bridge_command_sink.hpp"
 
-namespace prop_arm::app {
+namespace davinci_arm::app {
 
 class AppContext {
 public:
     AppContext();
     ~AppContext();
-
     MainWindow& mainWindow() noexcept;
     rclcpp::Node::SharedPtr node() const noexcept;
 
@@ -29,19 +28,19 @@ private:
 
 private:
     rclcpp::Node::SharedPtr node_;
-    std::shared_ptr<prop_arm::infra::ros::TopicRegistry> topic_registry_;
-    std::unique_ptr<prop_arm::infra::ros::LimitsRegistry> limits_registry_;
+    std::shared_ptr<davinci_arm::infra::ros::TopicRegistry> topic_registry_;
+    std::unique_ptr<davinci_arm::infra::ros::LimitsRegistry> limits_registry_;
 
-    prop_arm::models::TelemetryStore telemetry_;
-    prop_arm::core::services::RecorderService recorder_;
+    davinci_arm::models::TelemetryStore telemetry_;
+    davinci_arm::core::services::RecorderService recorder_;
 
     MainWindow main_window_;
-    std::unique_ptr<prop_arm::infra::ros::DavinciArmRosBridge> ros_bridge_;
+    std::unique_ptr<davinci_arm::infra::ros::DavinciArmRosBridge> ros_bridge_;
 
     std::filesystem::path workspace_path_;
-    std::unique_ptr<prop_arm::services::UrdfUpdater> urdf_updater_;
-    std::unique_ptr<prop_arm::infra::ros::DavinciArmRosBridgeCommandSink> calib_sink_;
-    std::unique_ptr<prop_arm::services::CalibrationService> calibration_service_;
+    std::unique_ptr<davinci_arm::services::UrdfUpdater> urdf_updater_;
+    std::unique_ptr<davinci_arm::infra::ros::DavinciArmRosBridgeCommandSink> calib_sink_;
+    std::unique_ptr<davinci_arm::services::CalibrationService> calibration_service_;
 };
 
-} // namespace prop_arm::app
+} // namespace davinci_arm::app

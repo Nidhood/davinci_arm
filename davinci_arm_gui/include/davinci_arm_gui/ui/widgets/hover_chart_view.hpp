@@ -7,7 +7,7 @@
 #include <QGraphicsTextItem>
 #include <QPointF>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 class HoverChartView final : public QChartView {
     Q_OBJECT
@@ -51,4 +51,4 @@ private:
     friend class ChartBase;
 };
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

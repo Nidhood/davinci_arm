@@ -3,14 +3,14 @@
 #include <cmath>
 #include "davinci_arm_gui/core/models/domain.hpp"
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 class ValueFilter {
 public:
     void setTau(double seconds) {
         tau_ = seconds;
     }
-    double filter(prop_arm::models::Domain d, double y, double dt);
+    double filter(davinci_arm::models::Domain d, double y, double dt);
     void reset();
 
 private:
@@ -25,4 +25,4 @@ private:
     State sim_{};
 };
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

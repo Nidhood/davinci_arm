@@ -9,7 +9,7 @@
 #include <QFrame>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 SpeedPlot::SpeedPlot(QWidget* parent)
     : QWidget(parent) {
@@ -41,7 +41,7 @@ QWidget* SpeedPlot::makeChartFrame_(QWidget* child, const char* object_name) {
     return frame;
 }
 
-std::chrono::steady_clock::time_point SpeedPlot::sampleTime_(const prop_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point SpeedPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
@@ -49,10 +49,10 @@ std::chrono::steady_clock::time_point SpeedPlot::sampleTime_(const prop_arm::mod
 }
 
 double SpeedPlot::tipSpeedMs_(double rad_s) const {
-    return prop_arm::core::math::rad_s_to_m_s(rad_s, kPropRadiusM_);
+    return davinci_arm::core::math::rad_s_to_m_s(rad_s, kPropRadiusM_);
 }
 
-void SpeedPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void SpeedPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
     limits_ = limits;
     if (!limits_ || !chart_) return;
 
@@ -60,13 +60,13 @@ void SpeedPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* li
     chart_->setYRange(tipSpeedMs_(r.min), tipSpeedMs_(r.max));
 }
 
-void SpeedPlot::setStreamLive(prop_arm::models::Domain domain, bool live) {
+void SpeedPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     if (!chart_) return;
-    if (domain == prop_arm::models::Domain::Real) chart_->setRealLive(live);
+    if (domain == davinci_arm::models::Domain::Real) chart_->setRealLive(live);
     else                                          chart_->setSimLive(live);
 }
 
-void SpeedPlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
+void SpeedPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     if (!sample.valid || !chart_) return;
 
     const auto ts = sampleTime_(sample);
@@ -86,4 +86,4 @@ void SpeedPlot::clear() {
     if (chart_) chart_->clear();
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

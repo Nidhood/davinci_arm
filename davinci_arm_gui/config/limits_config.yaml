@@ -4,12 +4,12 @@ davinci_arm_gui_node:
       # Angle limits (degrees):
       angle:
         min: 0.0
-        max: 90.0
+        max: 360.0
 
       # Motor speed limits (rad/s):
       motor_speed:
-        min: 0.0
-        max: 1600.0
+        min: -4.0
+        max: 4.0
 
       # PWM limits (microseconds):
       pwm:
@@ -18,15 +18,15 @@ davinci_arm_gui_node:
 
       # Duty cycle limits (percentage):
       duty:
-        min: 5.0
-        max: 10.0
+        min: 0.0
+        max: 100.0
 
       # Error between real and sim (degrees):
       error:
-        min: 0.0
-        max: 90.0
+        min: -180.0
+        max: 180.0
 
       # Error between actual angle and the ref angle (degrees):
       error_tracking:
-        min: -90.0
-        max: 90.0
+        min: -180.0
+        max: 180.0

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 namespace {
 
@@ -31,33 +31,33 @@ inline int clampi(int v, int lo, int hi) {
 
 } // namespace
 
-SampleRateEstimator::State& SampleRateEstimator::getState(prop_arm::models::Domain d) {
+SampleRateEstimator::State& SampleRateEstimator::getState(davinci_arm::models::Domain d) {
     switch (d) {
-    case prop_arm::models::Domain::Real:
+    case davinci_arm::models::Domain::Real:
         return real_;
-    case prop_arm::models::Domain::Sim:
+    case davinci_arm::models::Domain::Sim:
         return sim_;
-    case prop_arm::models::Domain::Ref:
+    case davinci_arm::models::Domain::Ref:
         return ref_;
     default:
         return real_;
     }
 }
 
-const SampleRateEstimator::State& SampleRateEstimator::getState(prop_arm::models::Domain d) const {
+const SampleRateEstimator::State& SampleRateEstimator::getState(davinci_arm::models::Domain d) const {
     switch (d) {
-    case prop_arm::models::Domain::Real:
+    case davinci_arm::models::Domain::Real:
         return real_;
-    case prop_arm::models::Domain::Sim:
+    case davinci_arm::models::Domain::Sim:
         return sim_;
-    case prop_arm::models::Domain::Ref:
+    case davinci_arm::models::Domain::Ref:
         return ref_;
     default:
         return real_;
     }
 }
 
-void SampleRateEstimator::observe(prop_arm::models::Domain d, double t) {
+void SampleRateEstimator::observe(davinci_arm::models::Domain d, double t) {
     if (!std::isfinite(t)) return;
 
     auto& st = getState(d);
@@ -70,7 +70,7 @@ void SampleRateEstimator::observe(prop_arm::models::Domain d, double t) {
     st.last_t = t;
 }
 
-std::optional<double> SampleRateEstimator::dtEma(prop_arm::models::Domain d) const {
+std::optional<double> SampleRateEstimator::dtEma(davinci_arm::models::Domain d) const {
     const auto& st = getState(d);
 
     if (!st.has_dt || !(st.dt_ema > 0.0) || !std::isfinite(st.dt_ema)) {
@@ -100,4 +100,4 @@ void SampleRateEstimator::clear() {
     ref_ = State{};
 }
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

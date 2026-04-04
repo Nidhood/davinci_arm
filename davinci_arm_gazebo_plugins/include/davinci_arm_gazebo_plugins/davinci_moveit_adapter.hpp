@@ -25,15 +25,7 @@ namespace davinci_arm_gazebo_plugins
 using CallbackReturn =
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-//------------------------------------------------------------------------------
-// Forward declaration of the private implementation
-//------------------------------------------------------------------------------
-
 class DavinciMoveItAdapterPrivate;
-
-//------------------------------------------------------------------------------
-// MoveIt / ros2_control adapter for the Davinci Arm in Gazebo
-//------------------------------------------------------------------------------
 
 class DavinciMoveItAdapter : public gz_ros2_control::GazeboSimSystemInterface
 {
@@ -43,10 +35,6 @@ public:
     DavinciMoveItAdapter();
     ~DavinciMoveItAdapter() override;
 
-    //--------------------------------------------------------------------------
-    // Gazebo <-> ros2_control initialization
-    //--------------------------------------------------------------------------
-
     bool initSim(
         rclcpp::Node::SharedPtr & model_nh,
         std::map<std::string, gz::sim::Entity> & joints,
@@ -54,10 +42,7 @@ public:
         gz::sim::EntityComponentManager & ecm,
         unsigned int update_rate) override;
 
-    //--------------------------------------------------------------------------
-    // Hardware interface lifecycle
-    //--------------------------------------------------------------------------
-
+    // Hardware interface life cycle configurations:
     CallbackReturn on_init(
         const hardware_interface::HardwareComponentInterfaceParams & params) override;
 
@@ -76,17 +61,11 @@ public:
     CallbackReturn on_shutdown(
         const rclcpp_lifecycle::State & previous_state) override;
 
-    //--------------------------------------------------------------------------
-    // ros2_control interfaces
-    //--------------------------------------------------------------------------
-
+    // ros2_control interfaces:
     std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
     std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-    //--------------------------------------------------------------------------
-    // Hardware telemetry / command exchange
-    //--------------------------------------------------------------------------
-
+    // Hardware telemetry / command exchange:
     hardware_interface::return_type read(
         const rclcpp::Time & time,
         const rclcpp::Duration & period) override;

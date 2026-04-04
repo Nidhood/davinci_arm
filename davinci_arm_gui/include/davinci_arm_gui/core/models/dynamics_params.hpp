@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 struct DavinciArmDynamicsParams {
 
@@ -29,4 +29,4 @@ struct DavinciArmDynamicsParams {
 
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

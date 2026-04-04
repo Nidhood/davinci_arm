@@ -1,37 +1,40 @@
 #pragma once
 
 #include <QWidget>
-#include <QString>
 
 #include "davinci_arm_gui/core/models/calibration_types.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 
-class QCheckBox;
+#include <array>
+#include <cstddef>
+
+QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QComboBox;
 class QDoubleSpinBox;
-class QGroupBox;
 class QLabel;
-class QStackedWidget;
+class QPlainTextEdit;
+class QProgressBar;
 class QPushButton;
+class QTableWidget;
+QT_END_NAMESPACE
 
-namespace prop_arm::infra::ros {
+namespace davinci_arm::infra::ros {
 class LimitsRegistry;
 }
 
-namespace prop_arm::services {
+namespace davinci_arm::services {
 class CalibrationService;
 }
 
-namespace prop_arm::ui::widgets {
-class AnglePlot;
-class ArmVisualizer;
+namespace davinci_arm::ui::widgets {
+class AngleRefPlot;
 class ErrorPlot;
-class Panel;
-class ValueTile;
+class ChartBase;
 }
 
-namespace prop_arm::ui::pages {
+namespace davinci_arm::ui::pages {
 
 class CalibrationPage final : public QWidget {
     Q_OBJECT
@@ -39,105 +42,76 @@ class CalibrationPage final : public QWidget {
 public:
     explicit CalibrationPage(QWidget* parent = nullptr);
 
-    void setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept;
-    void setCalibrationService(prop_arm::services::CalibrationService* service) noexcept;
+    void setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept;
+    void setCalibrationService(davinci_arm::services::CalibrationService* service) noexcept;
 
-    void setStreamLive(prop_arm::models::Domain domain, bool live);
-    void onTelemetry(const prop_arm::models::TelemetrySample& sample);
+    void setStreamLive(davinci_arm::models::Domain domain, bool live);
+    void onTelemetry(const davinci_arm::models::TelemetrySample& sample);
 
 signals:
-    void startCalibrationRequested(prop_arm::models::CalibrationConfig cfg);
+    void startCalibrationRequested(davinci_arm::models::CalibrationConfig cfg);
     void stopCalibrationRequested();
     void applyParametersRequested();
     void resetCalibrationRequested();
 
 private slots:
+    void onFocusButtonClicked_(int index);
     void onStartClicked_();
     void onStopClicked_();
     void onApplyClicked_();
     void onResetClicked_();
-    void onCalibrationTypeChanged_();
-
-    void onStatusChanged_(prop_arm::models::CalibrationStatus status);
-    void onProgressUpdated_(double progress01);
-    void onCalibrationCompleted_(prop_arm::models::CalibrationResult result);
-    void onMetricsUpdated_(prop_arm::models::CalibrationMetrics metrics);
-    void onParametersChanged_();
 
 private:
+    static constexpr std::size_t kJointCount = 5;
+
     void buildUi_();
-    void wireLimits_();
-    void wireCalibrationService_();
+    QWidget* buildLeftColumn_();
+    QWidget* buildRightColumn_();
+    QWidget* buildFocusPanel_();
+    QWidget* buildConfigPanel_();
+    QWidget* buildActionPanel_();
+    QWidget* buildParameterPanel_();
+    QWidget* buildLogPanel_();
 
-    void updateMetricsDisplay_();
-    void updateParameterDisplay_();
-
-    [[nodiscard]] prop_arm::models::CalibrationConfig buildConfig_() const;
-    [[nodiscard]] QString statusToString_(prop_arm::models::CalibrationStatus status) const;
+    void connectSignals_();
+    void applyAngleRanges_();
+    void updateChartTitles_();
+    void updateStatusUi_(const QString& status, int progress_pct);
+    void updateParameterEstimates_(double real_deg, double ref_deg);
+    int activeJointIndex_() const noexcept;
+    QString labelForJoint_(int joint_index) const;
+    [[nodiscard]] davinci_arm::models::CalibrationConfig buildConfig_() const;
 
 private:
-    // External wiring
-    const prop_arm::infra::ros::LimitsRegistry* limits_{nullptr};
-    prop_arm::services::CalibrationService* calibration_service_{nullptr};
+    const davinci_arm::infra::ros::LimitsRegistry* limits_{nullptr};
+    davinci_arm::services::CalibrationService* calibration_service_{nullptr};
 
-    // Layout: 1x2 (left calibration, right visuals)
-    prop_arm::ui::widgets::Panel* calibration_panel_{nullptr};
+    QButtonGroup* focus_group_{nullptr};
+    std::array<QPushButton*, kJointCount> focus_buttons_{};
+    int active_joint_index_{0};
 
-    // Right side
-    prop_arm::ui::widgets::Panel* arm_panel_{nullptr};
-    prop_arm::ui::widgets::Panel* error_panel_{nullptr};
+    QLabel* status_value_{nullptr};
+    QProgressBar* progress_bar_{nullptr};
 
-    // Visual widgets
-    prop_arm::ui::widgets::ArmVisualizer* arm_viz_{nullptr};
-    prop_arm::ui::widgets::AnglePlot* angle_plot_{nullptr};
-    prop_arm::ui::widgets::ErrorPlot* error_plot_{nullptr};
-
-    // Calibration sub-grid groups (inside calibration_panel_)
-    QGroupBox* status_group_{nullptr};
-    QGroupBox* config_group_{nullptr};
-    QGroupBox* metrics_group_{nullptr};
-    QGroupBox* params_group_{nullptr};
-
-    // Status widgets
-    QLabel* status_{nullptr};
-    prop_arm::ui::widgets::ValueTile* progress_{nullptr};
-    QPushButton* start_{nullptr};
-    QPushButton* stop_{nullptr};
-    QPushButton* apply_{nullptr};
-    QPushButton* reset_{nullptr};
-
-    // Config widgets
     QComboBox* calibration_type_{nullptr};
-    QDoubleSpinBox* duration_{nullptr};
-    QDoubleSpinBox* settling_time_{nullptr};
-    QCheckBox* auto_apply_{nullptr};
+    QComboBox* excitation_profile_{nullptr};
+    QDoubleSpinBox* amplitude_spin_{nullptr};
+    QDoubleSpinBox* duration_spin_{nullptr};
+    QDoubleSpinBox* repetitions_spin_{nullptr};
 
-    // Metrics tiles
-    prop_arm::ui::widgets::ValueTile* rmse_tile_{nullptr};
-    prop_arm::ui::widgets::ValueTile* max_error_tile_{nullptr};
-    prop_arm::ui::widgets::ValueTile* mean_error_tile_{nullptr};
-    prop_arm::ui::widgets::ValueTile* correlation_tile_{nullptr};
+    QTableWidget* identified_params_table_{nullptr};
+    QPlainTextEdit* notes_log_{nullptr};
 
-    // Parameters stacked
-    QStackedWidget* params_stack_{nullptr};
+    QPushButton* start_btn_{nullptr};
+    QPushButton* stop_btn_{nullptr};
+    QPushButton* apply_btn_{nullptr};
+    QPushButton* reset_btn_{nullptr};
 
-    // Motor params
-    QDoubleSpinBox* kw_spin_{nullptr};
-    QDoubleSpinBox* tau_w_spin_{nullptr};
-    QDoubleSpinBox* l_w_spin_{nullptr};
-    QDoubleSpinBox* motor_scale_spin_{nullptr};
+    davinci_arm::ui::widgets::AngleRefPlot* angle_ref_plot_{nullptr};
+    davinci_arm::ui::widgets::ErrorPlot* error_plot_{nullptr};
 
-    // Physics params
-    QDoubleSpinBox* mass_spin_{nullptr};
-    QDoubleSpinBox* inertia_spin_{nullptr};
-    QDoubleSpinBox* damping_spin_{nullptr};
-    QDoubleSpinBox* friction_spin_{nullptr};
-
-    // Telemetry cache to support absolute error behavior
-    bool seen_real_{false};
-    bool seen_sim_{false};
-    double last_real_angle_{0.0};
-    double last_sim_angle_{0.0};
+    bool real_live_{false};
+    bool sim_live_{false};
 };
 
-}  // namespace prop_arm::ui::pages
+}  // namespace davinci_arm::ui::pages

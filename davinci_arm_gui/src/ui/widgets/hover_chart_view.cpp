@@ -6,7 +6,7 @@
 #include <QGraphicsScene>
 #include <QMouseEvent>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 HoverChartView::HoverChartView(QWidget* parent)
     : QChartView(parent) {
@@ -78,4 +78,4 @@ void HoverChartView::clearHoverElements() {
     removeAndDelete(hover_text_);
 }
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

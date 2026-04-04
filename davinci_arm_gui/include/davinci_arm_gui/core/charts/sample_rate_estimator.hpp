@@ -3,13 +3,13 @@
 #include <limits>
 #include "davinci_arm_gui/core/models/domain.hpp"
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 class SampleRateEstimator {
 public:
-    void observe(prop_arm::models::Domain d, double t);
+    void observe(davinci_arm::models::Domain d, double t);
 
-    [[nodiscard]] std::optional<double> dtEma(prop_arm::models::Domain d) const;
+    [[nodiscard]] std::optional<double> dtEma(davinci_arm::models::Domain d) const;
 
     static int recommendedMaxPoints(double window_s, double dt);
 
@@ -22,12 +22,12 @@ private:
         double last_t{std::numeric_limits<double>::quiet_NaN()};
     };
 
-    State& getState(prop_arm::models::Domain d);
-    const State& getState(prop_arm::models::Domain d) const;
+    State& getState(davinci_arm::models::Domain d);
+    const State& getState(davinci_arm::models::Domain d) const;
 
     State real_{};
     State sim_{};
     State ref_{};
 };
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

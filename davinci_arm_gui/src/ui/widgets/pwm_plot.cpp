@@ -8,7 +8,7 @@
 #include <QFrame>
 #include <QVBoxLayout>
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 PwmPlot::PwmPlot(QWidget* parent)
     : QWidget(parent) {
@@ -40,14 +40,14 @@ QWidget* PwmPlot::makeChartFrame_(QWidget* child, const char* object_name) {
     return frame;
 }
 
-std::chrono::steady_clock::time_point PwmPlot::sampleTime_(const prop_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point PwmPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void PwmPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void PwmPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
     limits_ = limits;
     if (!limits_ || !chart_) return;
 
@@ -55,13 +55,13 @@ void PwmPlot::setLimitsRegistry(const prop_arm::infra::ros::LimitsRegistry* limi
     chart_->setYRange(static_cast<double>(r.min), static_cast<double>(r.max));
 }
 
-void PwmPlot::setStreamLive(prop_arm::models::Domain domain, bool live) {
+void PwmPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     if (!chart_) return;
-    if (domain == prop_arm::models::Domain::Real) chart_->setRealLive(live);
+    if (domain == davinci_arm::models::Domain::Real) chart_->setRealLive(live);
     else                                          chart_->setSimLive(live);
 }
 
-void PwmPlot::pushSample(const prop_arm::models::TelemetrySample& sample) {
+void PwmPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     if (!sample.valid || !chart_) return;
 
     const auto ts = sampleTime_(sample);
@@ -81,4 +81,4 @@ void PwmPlot::clear() {
     if (chart_) chart_->clear();
 }
 
-}  // namespace prop_arm::ui::widgets
+}  // namespace davinci_arm::ui::widgets

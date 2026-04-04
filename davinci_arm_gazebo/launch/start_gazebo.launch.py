@@ -71,7 +71,7 @@ def generate_launch_description():
             ) ]
         ),
         
-        #5. Spawn object models in Gazebo:
+        # 5. Spawn object models in Gazebo:
         TimerAction(
             period=7.0,
             actions=[ IncludeLaunchDescription(

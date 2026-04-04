@@ -3,132 +3,165 @@
 #include "davinci_arm_gui/core/models/calibration_types.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/core/services/calibration_interfaces.hpp"
+#include "davinci_arm_gui/infra/ros/calibration_command_sink.hpp"
 
 #include <QObject>
+#include <QString>
 
-#include <atomic>
 #include <chrono>
-#include <cstdint>
+#include <cstddef>
+#include <memory>
 #include <mutex>
+#include <optional>
+#include <string>
 #include <thread>
 #include <vector>
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 class TelemetryStore;
 }
 
-namespace prop_arm::services {
+namespace davinci_arm::services {
 
 class UrdfUpdater;
-
-// Domain-specific command sink used for calibration experiments.
-class ICalibrationCommandSink {
-public:
-    virtual ~ICalibrationCommandSink() = default;
-
-    virtual void sendPwmUs(prop_arm::models::Domain domain, std::uint16_t pwm_us) = 0;
-    virtual void sendRefAngleRad(prop_arm::models::Domain domain, double ref_angle_rad) = 0;
-    virtual void sendAutoMode(prop_arm::models::Domain domain, bool enabled) = 0;
-    virtual void sendStop(prop_arm::models::Domain domain) = 0;
-};
-
-// Optional: implement a sim reloader (respawn/reload entity).
-class ISimReloadHook {
-public:
-    virtual ~ISimReloadHook() = default;
-    virtual bool reloadSimulation() = 0; // return false if not supported
-};
 
 class CalibrationService final : public QObject {
     Q_OBJECT
 
 public:
-    // Default ctor (wire using setters)
     explicit CalibrationService(QObject* parent = nullptr);
-
-    // Convenience ctor (wire in one shot) - FIXES your make_unique(...) error
-    explicit CalibrationService(prop_arm::models::TelemetryStore* store,
-                                ICalibrationCommandSink* sink,
-                                prop_arm::services::UrdfUpdater* urdf_updater,
-                                ISimReloadHook* sim_reload = nullptr,
+    explicit CalibrationService(davinci_arm::models::TelemetryStore* store,
+                                std::shared_ptr<ICalibrationCommander> commander,
+                                std::shared_ptr<ISimParamApplier> sim_param_applier = {},
+                                std::shared_ptr<IRobotPoseProvider> pose_provider = {},
+                                std::shared_ptr<IWorkspacePersistence> workspace_persistence = {},
                                 QObject* parent = nullptr);
-
     ~CalibrationService() override;
 
     CalibrationService(const CalibrationService&) = delete;
     CalibrationService& operator=(const CalibrationService&) = delete;
 
-    // Wiring (safe to call any time; typically before starting)
-    void setTelemetryStore(prop_arm::models::TelemetryStore* store) noexcept;
+    void setTelemetryStore(davinci_arm::models::TelemetryStore* store) noexcept;
+
+    // New wiring API
+    void setCommander(std::shared_ptr<ICalibrationCommander> commander) noexcept;
+    void setSimParamApplier(std::shared_ptr<ISimParamApplier> sim_param_applier) noexcept;
+    void setPoseProvider(std::shared_ptr<IRobotPoseProvider> pose_provider) noexcept;
+    void setWorkspacePersistence(std::shared_ptr<IWorkspacePersistence> persistence) noexcept;
+
+    // Backward-compatible wiring API used by existing app_context / ROS bridge code.
     void setCommandSink(ICalibrationCommandSink* sink) noexcept;
-    void setUrdfUpdater(prop_arm::services::UrdfUpdater* updater) noexcept;
+    void setUrdfUpdater(UrdfUpdater* updater) noexcept;
     void setSimReloadHook(ISimReloadHook* hook) noexcept;
 
-    // API used by CalibrationPage
-    void startCalibration(const prop_arm::models::CalibrationConfig& cfg);
+    void startCalibration(const davinci_arm::models::CalibrationConfig& cfg);
     void stopCalibration();
-    void applyCalibration();        // writes to xacro via UrdfUpdater
+    void applyCalibration();
     void resetToDefaults();
 
-    [[nodiscard]] prop_arm::models::CalibrationResult getLastResult() const;
-    [[nodiscard]] prop_arm::models::MotorVelocityParams getMotorParams() const;
-    [[nodiscard]] prop_arm::models::ArmPhysicsParams getPhysicsParams() const;
+    void beginWorkspaceCalibration(const davinci_arm::models::PaperCalibrationConfig& cfg);
+    bool captureWorkspaceOrigin();
+    bool captureWorkspaceXAxisPoint();
+    bool captureWorkspaceYAxisPoint();
+    bool captureWorkspaceHoverPoint();
+    bool solveWorkspaceCalibration();
+    bool applyWorkspaceCalibration();
+    void resetWorkspaceCalibration();
+
+    [[nodiscard]] davinci_arm::models::CalibrationResult getLastResult() const;
+    [[nodiscard]] davinci_arm::models::MotorVelocityParams getMotorParams() const;
+    [[nodiscard]] davinci_arm::models::ArmPhysicsParams getPhysicsParams() const;
+    [[nodiscard]] davinci_arm::models::DrawingWorkspaceCalibration getDrawingWorkspace() const;
+    [[nodiscard]] davinci_arm::models::PaperCalibrationConfig getPaperCalibrationConfig() const;
+    [[nodiscard]] std::string getWorkspaceCaptureStage() const;
 
 signals:
-    void statusChanged(prop_arm::models::CalibrationStatus status);
+    void statusChanged(davinci_arm::models::CalibrationStatus status);
     void progressUpdated(double progress01);
-    void calibrationCompleted(prop_arm::models::CalibrationResult result);
-    void metricsUpdated(prop_arm::models::CalibrationMetrics metrics);
+    void calibrationCompleted(davinci_arm::models::CalibrationResult result);
+    void metricsUpdated(davinci_arm::models::CalibrationMetrics metrics);
     void parametersChanged();
+    void workspaceCalibrationUpdated(davinci_arm::models::DrawingWorkspaceCalibration workspace);
+    void workspaceCaptureStageChanged(QString stage);
+    void workspaceValidationMessage(QString message);
 
 private:
-    void runWorker_(prop_arm::models::CalibrationConfig cfg);
+    using TimePoint = std::chrono::steady_clock::time_point;
 
-    // One evaluation = apply params (sim) + run experiment + compute cost
-    double evaluateMotorCost_(const prop_arm::models::CalibrationConfig& cfg,
-                              const prop_arm::models::MotorVelocityParams& p,
-                              prop_arm::models::CalibrationMetrics* out_metrics);
+    void runWorker_(davinci_arm::models::CalibrationConfig cfg, std::stop_token st);
+    [[nodiscard]] bool canRunMotorPhysics_() const noexcept;
+    [[nodiscard]] bool canRunWorkspace_() const noexcept;
 
-    double evaluatePhysicsCost_(const prop_arm::models::CalibrationConfig& cfg,
-                                const prop_arm::models::ArmPhysicsParams& p,
-                                prop_arm::models::CalibrationMetrics* out_metrics);
+    [[nodiscard]] bool runMotorExperimentLegacy_(const davinci_arm::models::CalibrationConfig& cfg,
+            std::stop_token st);
+    [[nodiscard]] bool runPhysicsExperimentLegacy_(const davinci_arm::models::CalibrationConfig& cfg,
+            std::stop_token st);
 
-    // Experiment execution
-    bool runMotorExperiment_(const prop_arm::models::CalibrationConfig& cfg);
-    bool runPhysicsExperiment_(const prop_arm::models::CalibrationConfig& cfg);
+    [[nodiscard]] bool applyMotorParamsToSim_(const davinci_arm::models::MotorVelocityParams& p);
+    [[nodiscard]] bool applyPhysicsParamsToSim_(const davinci_arm::models::ArmPhysicsParams& p);
+    [[nodiscard]] bool reloadSimulation_();
+    void stopAllOutputs_();
 
-    // Data window extraction (by steady_clock time window)
-    std::vector<prop_arm::models::TelemetrySample> collectWindow_(
-        prop_arm::models::Domain domain,
-        std::chrono::steady_clock::time_point t0,
-        std::chrono::steady_clock::time_point t1,
+    double evaluateMotorCost_(const davinci_arm::models::CalibrationConfig& cfg,
+                              const davinci_arm::models::MotorVelocityParams& p,
+                              std::stop_token st,
+                              davinci_arm::models::CalibrationMetrics* out_metrics);
+
+    double evaluatePhysicsCost_(const davinci_arm::models::CalibrationConfig& cfg,
+                                const davinci_arm::models::ArmPhysicsParams& p,
+                                std::stop_token st,
+                                davinci_arm::models::CalibrationMetrics* out_metrics);
+
+    [[nodiscard]] std::vector<davinci_arm::models::TelemetrySample> collectWindow_(
+        davinci_arm::models::Domain domain,
+        TimePoint t0,
+        TimePoint t1,
         std::size_t max_points) const;
 
-    // Helpers
-    static prop_arm::models::CalibrationMetrics makeMetrics_(
-        double rmse, double max_error, double mean_error, double corr, std::size_t n);
+    [[nodiscard]] static davinci_arm::models::CalibrationMetrics makeMetrics_(
+        double rmse,
+        double max_error,
+        double mean_error,
+        double corr,
+        std::size_t n);
 
-    void setStatus_(prop_arm::models::CalibrationStatus s);
+    void setStatus_(davinci_arm::models::CalibrationStatus s);
     void setProgress_(double p01);
 
-    [[nodiscard]] bool canRun_() const noexcept;
+    [[nodiscard]] std::optional<davinci_arm::models::CartesianPose> capturePose_(davinci_arm::models::Domain domain);
+    [[nodiscard]] bool hasAllWorkspaceCaptures_() const noexcept;
+    [[nodiscard]] davinci_arm::models::DrawingWorkspaceCalibration computeWorkspace_() const;
 
 private:
-    prop_arm::models::TelemetryStore* store_{nullptr};
-    ICalibrationCommandSink* sink_{nullptr};
-    prop_arm::services::UrdfUpdater* urdf_updater_{nullptr};
-    ISimReloadHook* sim_reload_{nullptr};
+    davinci_arm::models::TelemetryStore* store_{nullptr};
 
-    std::atomic_bool stop_{false};
-    std::atomic_bool running_{false};
+    std::shared_ptr<ICalibrationCommander> commander_;
+    std::shared_ptr<ISimParamApplier> sim_param_applier_;
+    std::shared_ptr<IRobotPoseProvider> pose_provider_;
+    std::shared_ptr<IWorkspacePersistence> workspace_persistence_;
+
+    // Legacy wiring used by older app_context code.
+    ICalibrationCommandSink* command_sink_{nullptr};
+    UrdfUpdater* urdf_updater_{nullptr};
+    ISimReloadHook* sim_reload_hook_{nullptr};
 
     mutable std::mutex state_mtx_;
-    prop_arm::models::MotorVelocityParams motor_params_{};
-    prop_arm::models::ArmPhysicsParams physics_params_{};
-    prop_arm::models::CalibrationResult last_result_{};
-    prop_arm::models::CalibrationStatus status_{prop_arm::models::CalibrationStatus::Idle};
 
-    std::thread worker_;
+    davinci_arm::models::MotorVelocityParams motor_params_{};
+    davinci_arm::models::ArmPhysicsParams physics_params_{};
+    davinci_arm::models::CalibrationResult last_result_{};
+    davinci_arm::models::CalibrationStatus status_{davinci_arm::models::CalibrationStatus::Idle};
+
+    davinci_arm::models::PaperCalibrationConfig paper_cfg_{};
+    davinci_arm::models::DrawingWorkspaceCalibration workspace_{};
+    std::optional<davinci_arm::models::CartesianPose> captured_origin_;
+    std::optional<davinci_arm::models::CartesianPose> captured_x_axis_;
+    std::optional<davinci_arm::models::CartesianPose> captured_y_axis_;
+    std::optional<davinci_arm::models::CartesianPose> captured_hover_;
+    std::string workspace_stage_{"idle"};
+
+    std::jthread worker_;
 };
 
-}  // namespace prop_arm::services
+} // namespace davinci_arm::services

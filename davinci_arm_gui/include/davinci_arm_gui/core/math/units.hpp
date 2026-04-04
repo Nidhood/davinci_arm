@@ -2,7 +2,7 @@
 
 #include <numbers>
 
-namespace prop_arm::core::math {
+namespace davinci_arm::core::math {
 
 // Angle:
 [[nodiscard]] constexpr inline double rad_to_deg(double rad) noexcept {
@@ -28,4 +28,4 @@ namespace prop_arm::core::math {
     return (radius_m != 0.0) ? (v_m_s / radius_m) : 0.0;
 }
 
-} // namespace prop_arm::core::math
+} // namespace davinci_arm::core::math

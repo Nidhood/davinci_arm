@@ -5,7 +5,7 @@
 
 class QLabel;
 
-namespace prop_arm::ui::widgets {
+namespace davinci_arm::ui::widgets {
 
 class SectionHeader final : public QWidget {
     Q_OBJECT
@@ -23,4 +23,4 @@ private:
     QLabel* subtitle_;
 };
 
-} // namespace prop_arm::ui::widgets
+} // namespace davinci_arm::ui::widgets

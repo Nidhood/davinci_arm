@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 namespace {
 constexpr double kTiny = 1e-12;
@@ -15,31 +15,31 @@ void ChartWindow::setLimits(Limits l) {
     enforce_();
 }
 
-std::deque<QPointF>& ChartWindow::buf_(prop_arm::models::Domain d) {
+std::deque<QPointF>& ChartWindow::buf_(davinci_arm::models::Domain d) {
     switch (d) {
-    case prop_arm::models::Domain::Real:
+    case davinci_arm::models::Domain::Real:
         return real_;
-    case prop_arm::models::Domain::Sim:
+    case davinci_arm::models::Domain::Sim:
         return sim_;
-    case prop_arm::models::Domain::Ref:
+    case davinci_arm::models::Domain::Ref:
         return ref_;
     }
     return real_; // Fallback (should never happen)
 }
 
-const std::deque<QPointF>& ChartWindow::buf_(prop_arm::models::Domain d) const {
+const std::deque<QPointF>& ChartWindow::buf_(davinci_arm::models::Domain d) const {
     switch (d) {
-    case prop_arm::models::Domain::Real:
+    case davinci_arm::models::Domain::Real:
         return real_;
-    case prop_arm::models::Domain::Sim:
+    case davinci_arm::models::Domain::Sim:
         return sim_;
-    case prop_arm::models::Domain::Ref:
+    case davinci_arm::models::Domain::Ref:
         return ref_;
     }
     return real_;
 }
 
-void ChartWindow::append(double t, double y, prop_arm::models::Domain d) {
+void ChartWindow::append(double t, double y, davinci_arm::models::Domain d) {
     if (!std::isfinite(t) || !std::isfinite(y)) return;
 
     auto& b = buf_(d);
@@ -95,4 +95,4 @@ void ChartWindow::enforce_() {
     }
 }
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

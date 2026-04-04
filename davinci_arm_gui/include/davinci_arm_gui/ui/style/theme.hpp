@@ -5,7 +5,7 @@
 
 #include "davinci_arm_gui/core/models/theme_id.hpp"
 
-namespace prop_arm::ui::style {
+namespace davinci_arm::ui::style {
 
 struct ThemeSpec {
     models::ThemeId id{};
@@ -20,4 +20,4 @@ struct ThemeSpec {
     QColor text_muted;
 };
 
-} // namespace prop_arm::ui::style
+} // namespace davinci_arm::ui::style

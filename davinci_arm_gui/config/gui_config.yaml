@@ -1,17 +1,46 @@
 davinci_arm_gui_node:
   ros__parameters:
+    joints:
+      names:
+        - shoulder_link_joint
+        - bicep_link_joint
+        - arm_link_joint
+        - wrist_link_joint
+        - end_effector_link_joint
+
     topic_ns:
-      real: "/arm"
-      sim: "/arm_sim"
+      real: "/davinci_arm/real"
+      sim: "/davinci_arm"
 
     topics:
+      telemetry:
+        # Real robot feedback.
+        real_joint_states: "/davinci_arm/real/joint_states"
+
+        # Gazebo -> ROS bridge currently republishes /davinci_arm/joint_states into /joint_states.
+        sim_joint_states: "/joint_states"
+
+        # ros2_control joint_trajectory_controller state topic.
+        controller_state: "/davinci_arm_controller/controller_state"
+
+        # MoveIt / planning topics reserved for the next GUI phases.
+        planning_scene: "/planning_scene"
+        display_planned_path: "/display_planned_path"
+        trajectory_execution_event: "/trajectory_execution_event"
+
+      commands:
+        # New multi-joint command paths.
+        sim_joint_trajectory: "/davinci_arm_controller/joint_trajectory"
+        real_joint_trajectory: "/davinci_arm_real_controller/joint_trajectory"
+
+        # Legacy scalar commands kept so the current UI and calibration service still compile.
+        ref_angle: "ref_angle_rad"
+        pwm_cmd: "esc/pwm_us"
+        auto_mode: "esc/auto_mode"
+
       signals:
+        # Legacy scalar telemetry labels kept for backwards compatibility inside the UI models.
         angle: "angle_rad"
         motor_speed: "motor_vel_rad"
         pwm_feedback: "esc/pwm_us_fb"
         angle_ref: "ref_angle_rad"
-
-      commands:
-        ref_angle: "ref_angle_rad"
-        pwm_cmd: "esc/pwm_us"
-        auto_mode: "esc/auto_mode"

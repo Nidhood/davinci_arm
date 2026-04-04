@@ -20,10 +20,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
 endif()
 
-#------------------------------------------------------------------------------
-# Dependencies
-#------------------------------------------------------------------------------
 
+# Bring in the package dependencies:
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -34,10 +32,7 @@ find_package(gz-sim8 REQUIRED)
 find_package(gz-transport13 REQUIRED)
 find_package(gz-msgs10 REQUIRED)
 
-#------------------------------------------------------------------------------
-# Library
-#------------------------------------------------------------------------------
-
+# Library:
 add_library(davinci_arm_moveit_adapter SHARED
     src/davinci_moveit_adapter.cpp
 )
@@ -63,10 +58,7 @@ pluginlib_export_plugin_description_file(
     urdf/davinci_arm_moveit_adapter_plugin.xml
 )
 
-#------------------------------------------------------------------------------
-# Install
-#------------------------------------------------------------------------------
-
+# Install:
 install(
     TARGETS davinci_arm_moveit_adapter
     EXPORT export_${PROJECT_NAME}
@@ -80,15 +72,12 @@ install(
     DESTINATION include
 )
 
-
+# Install directories:
 install(DIRECTORY config launch urdf
     DESTINATION share/${PROJECT_NAME}/
 )
 
-#------------------------------------------------------------------------------
-# Export
-#------------------------------------------------------------------------------
-
+# Export:
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(
     hardware_interface

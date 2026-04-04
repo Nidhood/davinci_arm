@@ -1,6 +1,6 @@
 #pragma once
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 enum class PlotSignalType {
     ArmAngleDeg,
@@ -9,4 +9,4 @@ enum class PlotSignalType {
     RefAngleDeg
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

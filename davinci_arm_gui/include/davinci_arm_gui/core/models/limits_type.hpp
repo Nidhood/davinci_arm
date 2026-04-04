@@ -2,7 +2,7 @@
 
 #include "davinci_arm_gui/core/models/range_type.hpp"
 
-namespace prop_arm::models {
+namespace davinci_arm::models {
 
 struct Limits {
     Range<double> angle_deg;
@@ -13,4 +13,4 @@ struct Limits {
     Range<double> error_tracking_deg{};
 };
 
-} // namespace prop_arm::models
+} // namespace davinci_arm::models

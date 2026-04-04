@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-namespace prop_arm::core::charts {
+namespace davinci_arm::core::charts {
 
 namespace {
 constexpr double kTiny = 1e-12;
@@ -123,4 +123,4 @@ void CurveBuilder::build(const std::deque<QPointF>& src, QVector<QPointF>& out) 
     out.push_back(QPointF(x.back(), y.back()));
 }
 
-} // namespace prop_arm::core::charts
+} // namespace davinci_arm::core::charts

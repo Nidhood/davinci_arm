@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 #include <QMetaObject>
 
-namespace prop_arm::app {
+namespace davinci_arm::app {
 
 RosQtBridge::RosQtBridge(QApplication& app, rclcpp::Node::SharedPtr node)
     : app_(app),
@@ -67,4 +67,4 @@ void RosQtBridge::sigintWatchLoop_() {
     );
 }
 
-}  // namespace prop_arm::app
+}  // namespace davinci_arm::app
