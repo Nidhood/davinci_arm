@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
@@ -15,11 +16,17 @@ class TopicRegistry final {
 public:
     explicit TopicRegistry(rclcpp::Node& node);
 
-    [[nodiscard]] std::string topic(davinci_arm::models::Domain domain,
-                                    davinci_arm::models::TelemetrySignalType signal) const;
+    [[nodiscard]] std::string topic(
+        davinci_arm::models::Domain domain,
+        davinci_arm::models::TelemetrySignalType signal) const;
 
-    [[nodiscard]] std::string topic(davinci_arm::models::Domain domain,
-                                    davinci_arm::models::CommandType command) const;
+    [[nodiscard]] std::string topic(
+        davinci_arm::models::Domain domain,
+        davinci_arm::models::CommandType command) const;
+
+    [[nodiscard]] std::string jointPositionCommandTopic(
+        davinci_arm::models::Domain domain,
+        const std::string& joint_name) const;
 
     [[nodiscard]] const std::vector<std::string>& jointNames() const noexcept;
 
@@ -33,13 +40,12 @@ public:
     [[nodiscard]] const std::string& planningSceneTopic() const noexcept;
     [[nodiscard]] const std::string& trajectoryExecutionEventTopic() const noexcept;
 
-    [[nodiscard]] const std::string& realJointTrajectoryCommandTopic() const noexcept;
-    [[nodiscard]] const std::string& simJointTrajectoryCommandTopic() const noexcept;
-
 private:
     static std::string join_(const std::string& ns, const std::string& name);
     static std::string normalizeNs_(std::string ns);
     static std::string normalizeTopic_(std::string topic);
+    static std::string stripJointSuffix_(std::string joint_name);
+    static std::string defaultCommandLeafFromJoint_(const std::string& joint_name);
 
     std::string real_ns_;
     std::string sim_ns_;
@@ -61,8 +67,9 @@ private:
     std::string display_planned_path_topic_;
     std::string planning_scene_topic_;
     std::string trajectory_execution_event_topic_;
-    std::string real_joint_trajectory_cmd_topic_;
-    std::string sim_joint_trajectory_cmd_topic_;
+
+    std::unordered_map<std::string, std::string> sim_joint_command_topics_;
+    std::unordered_map<std::string, std::string> real_joint_command_topics_;
 };
 
 }  // namespace davinci_arm::infra::ros

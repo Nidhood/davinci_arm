@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "davinci_arm_gui/core/charts/sample_rate_estimator.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 
@@ -31,7 +32,6 @@ class LimitsRegistry;
 namespace davinci_arm::ui::widgets {
 class AngleRefPlot;
 class ErrorPlot;
-class ChartBase;
 }
 
 namespace davinci_arm::ui::pages {
@@ -49,7 +49,6 @@ public:
     void setStreamLive(davinci_arm::models::Domain domain, bool live);
 
 signals:
-    // Compatibility signals kept intentionally.
     void autoModeChanged(bool enabled);
     void stopRequested();
     void stabilizeRequested();
@@ -60,13 +59,9 @@ signals:
     void teachModeRequested(bool enabled);
     void syncPoseFromRealRequested();
     void syncPoseFromSimRequested();
-
-    // High-level per-joint reference control.
     void jointReferenceChanged(int jointIndex, double deg);
     void jointBatchCommandRequested(const QVector<double>& jointsDeg);
     void jointTopicReferenceRequested(const QString& topic, double rad);
-
-    // Recorder API.
     void startRecordingRequested(double durationSec);
     void stopRecordingRequested();
     void exportRecordingRequested();
@@ -95,6 +90,7 @@ private:
     void applyAngleRanges_();
     void updateRecordingUi_();
     void updateChartTitles_();
+    void updateAdaptiveDensity_(davinci_arm::models::Domain domain, double t_sec) noexcept;
 
     void setActiveJointIndex_(int index);
     int activeJointIndex_() const noexcept;
@@ -104,8 +100,9 @@ private:
     void setJointUiDeg_(int jointIndex, double deg);
     void applyAllZero_();
 
-    QString topicForJoint_(int jointIndex) const;
     QString labelForJoint_(int jointIndex) const;
+    QString activeJointName_() const;
+    int resolveJointIndex_(const davinci_arm::models::TelemetrySample& sample) const noexcept;
 
 private:
     static constexpr std::size_t kJointCount = 5;
@@ -122,10 +119,11 @@ private:
     QPushButton* start_recording_btn_{nullptr};
     QPushButton* stop_recording_btn_{nullptr};
     QPushButton* export_recording_btn_{nullptr};
-    QPushButton* focus_joint_btn_{nullptr};
 
     davinci_arm::ui::widgets::AngleRefPlot* angle_ref_plot_{nullptr};
     davinci_arm::ui::widgets::ErrorPlot* error_plot_{nullptr};
+
+    davinci_arm::core::charts::SampleRateEstimator sample_rate_estimator_{};
 
     bool real_live_{false};
     bool sim_live_{false};

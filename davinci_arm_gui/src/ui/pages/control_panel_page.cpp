@@ -2,6 +2,7 @@
 
 #include "davinci_arm_gui/core/models/csv_export_options.hpp"
 #include "davinci_arm_gui/core/models/recording_state.hpp"
+#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
 #include "davinci_arm_gui/core/services/recorder_service.hpp"
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/angle_ref_plot.hpp"
@@ -9,6 +10,7 @@
 #include "davinci_arm_gui/ui/widgets/error_plot.hpp"
 #include "davinci_arm_gui/ui/widgets/export_preview_dialog.hpp"
 
+#include <QAbstractSpinBox>
 #include <QButtonGroup>
 #include <QDateTime>
 #include <QDoubleSpinBox>
@@ -25,29 +27,36 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <optional>
+#include <string>
+#include <type_traits>
 
 namespace davinci_arm::ui::pages {
 
 namespace {
 
-constexpr double kDegToRad = M_PI / 180.0;
+using davinci_arm::models::Domain;
+using davinci_arm::models::TelemetrySignalType;
+
 constexpr int kEmitThrottleMs = 40;
+constexpr double kChartWindowSeconds = 30.0;
 constexpr std::size_t kJointCount = 5;
 
 struct JointSpec final {
     const char* label;
-    const char* topic;
+    const char* joint_name;
 };
 
 constexpr std::array<JointSpec, kJointCount> kJointSpecs{{
-        {"Shoulder", "/davinci_arm/shoulder_cmd_pos"},
-        {"Bicep", "/davinci_arm/bicep_cmd_pos"},
-        {"Arm", "/davinci_arm/arm_cmd_pos"},
-        {"Wrist", "/davinci_arm/wrist_cmd_pos"},
-        {"End Effector", "/davinci_arm/end_effector_cmd_pos"},
+        {"Shoulder", "shoulder_link_joint"},
+        {"Bicep", "bicep_link_joint"},
+        {"Arm", "arm_link_joint"},
+        {"Wrist", "wrist_link_joint"},
+        {"End Effector", "end_effector_link_joint"},
     }};
 
-QFrame* makePanel(QWidget* parent) {
+QFrame* makePanel(QWidget* parent)
+{
     auto* panel = new QFrame(parent);
     panel->setObjectName("panel");
     panel->setFrameShape(QFrame::NoFrame);
@@ -61,18 +70,79 @@ QFrame* makePanel(QWidget* parent) {
     return panel;
 }
 
-void setChartTitle(QWidget* host, const QString& title) {
-    if (!host) return;
-    auto* chart = host->findChild<davinci_arm::ui::widgets::ChartBase*>();
-    if (chart) {
+davinci_arm::ui::widgets::ChartBase* chartOf(QWidget* host)
+{
+    if (!host) {
+        return nullptr;
+    }
+    return host->findChild<davinci_arm::ui::widgets::ChartBase*>();
+}
+
+void setChartTitle(QWidget* host, const QString& title)
+{
+    if (auto* chart = chartOf(host)) {
         chart->setTitle(title);
+    }
+}
+
+template<typename T>
+std::optional<std::string> jointNameOf(const T& sample)
+{
+    if constexpr (requires { sample.joint_name; }) {
+        return sample.joint_name;
+    } else if constexpr (requires { sample.label; }) {
+        return sample.label;
+    } else if constexpr (requires { sample.series; }) {
+        return sample.series;
+    } else if constexpr (requires { sample.channel; }) {
+        return sample.channel;
+    } else {
+        return std::nullopt;
+    }
+}
+
+template<typename T>
+std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
+{
+    if constexpr (requires { sample.signal; }) {
+        return sample.signal;
+    } else if constexpr (requires { sample.signal_type; }) {
+        return sample.signal_type;
+    } else if constexpr (requires { sample.telemetry_signal; }) {
+        return sample.telemetry_signal;
+    } else {
+        return std::nullopt;
+    }
+}
+
+template<typename T>
+std::optional<double> timeSecOf(const T& sample)
+{
+    if constexpr (requires { sample.time_sec; }) {
+        return static_cast<double>(sample.time_sec);
+    } else if constexpr (requires { sample.timestamp_sec; }) {
+        return static_cast<double>(sample.timestamp_sec);
+    } else if constexpr (requires { sample.t_sec; }) {
+        return static_cast<double>(sample.t_sec);
+    } else if constexpr (requires { sample.time_s; }) {
+        return static_cast<double>(sample.time_s);
+    } else if constexpr (requires { sample.t; }) {
+        using U = std::decay_t<decltype(sample.t)>;
+        if constexpr (std::is_arithmetic_v<U>) {
+            return static_cast<double>(sample.t);
+        } else {
+            return std::nullopt;
+        }
+    } else {
+        return std::nullopt;
     }
 }
 
 }  // namespace
 
 ControlPanelPage::ControlPanelPage(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+{
     buildUi_();
     connectSignals_();
     applyAngleRanges_();
@@ -80,7 +150,8 @@ ControlPanelPage::ControlPanelPage(QWidget* parent)
     updateRecordingUi_();
 }
 
-void ControlPanelPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void ControlPanelPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
+{
     limits_ = limits;
     if (angle_ref_plot_) {
         angle_ref_plot_->setLimitsRegistry(limits_);
@@ -91,12 +162,14 @@ void ControlPanelPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRe
     applyAngleRanges_();
 }
 
-void ControlPanelPage::setRecorderService(davinci_arm::core::services::RecorderService* recorder) {
+void ControlPanelPage::setRecorderService(davinci_arm::core::services::RecorderService* recorder)
+{
     recorder_service_ = recorder;
     updateRecordingUi_();
 }
 
-void ControlPanelPage::buildUi_() {
+void ControlPanelPage::buildUi_()
+{
     auto* root = new QHBoxLayout(this);
     root->setContentsMargins(16, 16, 16, 16);
     root->setSpacing(16);
@@ -105,7 +178,8 @@ void ControlPanelPage::buildUi_() {
     root->addWidget(buildRightColumn_(), 7);
 }
 
-QWidget* ControlPanelPage::buildLeftColumn_() {
+QWidget* ControlPanelPage::buildLeftColumn_()
+{
     auto* left = new QWidget(this);
     auto* layout = new QVBoxLayout(left);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -117,7 +191,8 @@ QWidget* ControlPanelPage::buildLeftColumn_() {
     return left;
 }
 
-QWidget* ControlPanelPage::buildRightColumn_() {
+QWidget* ControlPanelPage::buildRightColumn_()
+{
     auto* right = new QWidget(this);
     auto* layout = new QVBoxLayout(right);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -129,13 +204,21 @@ QWidget* ControlPanelPage::buildRightColumn_() {
     error_plot_ = new davinci_arm::ui::widgets::ErrorPlot(right);
     error_plot_->setMinimumHeight(300);
 
+    if (auto* chart = chartOf(angle_ref_plot_)) {
+        chart->setWindowSeconds(kChartWindowSeconds);
+    }
+    if (auto* chart = chartOf(error_plot_)) {
+        chart->setWindowSeconds(kChartWindowSeconds);
+    }
+
     layout->addWidget(angle_ref_plot_, 1);
     layout->addWidget(error_plot_, 1);
 
     return right;
 }
 
-QFrame* ControlPanelPage::buildReferencePanel_() {
+QFrame* ControlPanelPage::buildReferencePanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QVBoxLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -169,6 +252,7 @@ QFrame* ControlPanelPage::buildReferencePanel_() {
         focus_group_->addButton(btn, static_cast<int>(i));
         focus_row->addWidget(btn, static_cast<int>(i / 3), static_cast<int>(i % 3));
     }
+
     if (joint_widgets_[0].focus_button) {
         joint_widgets_[0].focus_button->setChecked(true);
     }
@@ -185,7 +269,6 @@ QFrame* ControlPanelPage::buildReferencePanel_() {
         joint_widgets_[i].slider = new QSlider(Qt::Horizontal, row);
         joint_widgets_[i].slider->setRange(0, 360);
         joint_widgets_[i].slider->setValue(0);
-        joint_widgets_[i].slider->setTickPosition(QSlider::NoTicks);
 
         joint_widgets_[i].spin = new QDoubleSpinBox(row);
         joint_widgets_[i].spin->setRange(0.0, 360.0);
@@ -209,7 +292,8 @@ QFrame* ControlPanelPage::buildReferencePanel_() {
     return panel;
 }
 
-QFrame* ControlPanelPage::buildRecordingPanel_() {
+QFrame* ControlPanelPage::buildRecordingPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QGridLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -238,14 +322,12 @@ QFrame* ControlPanelPage::buildRecordingPanel_() {
     layout->addWidget(stop_recording_btn_, 0, 2);
     layout->addWidget(recording_progress_, 1, 0, 1, 3);
     layout->addWidget(export_recording_btn_, 2, 0, 1, 3);
-    layout->setColumnStretch(0, 2);
-    layout->setColumnStretch(1, 1);
-    layout->setColumnStretch(2, 1);
 
     return panel;
 }
 
-void ControlPanelPage::connectSignals_() {
+void ControlPanelPage::connectSignals_()
+{
     if (focus_group_) {
         connect(focus_group_, &QButtonGroup::idClicked, this, &ControlPanelPage::onFocusButtonClicked_);
     }
@@ -253,25 +335,25 @@ void ControlPanelPage::connectSignals_() {
     for (std::size_t i = 0; i < joint_widgets_.size(); ++i) {
         auto* slider = joint_widgets_[i].slider;
         auto* spin = joint_widgets_[i].spin;
-        if (!slider || !spin) continue;
+        if (!slider || !spin) {
+            continue;
+        }
 
         connect(slider, &QSlider::valueChanged, this, [this, i](int value) {
-            if (!joint_widgets_[i].spin) return;
             const QSignalBlocker blocker(*joint_widgets_[i].spin);
             joint_widgets_[i].spin->setValue(static_cast<double>(value));
             publishJointReference_(static_cast<int>(i), static_cast<double>(value), false);
         });
 
         connect(slider, &QSlider::sliderReleased, this, [this, i]() {
-            if (!joint_widgets_[i].spin) return;
             publishJointReference_(static_cast<int>(i), joint_widgets_[i].spin->value(), true);
         });
 
-        connect(spin,
-                QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                this,
+        connect(
+            spin,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this,
         [this, i](double value) {
-            if (!joint_widgets_[i].slider) return;
             const QSignalBlocker blocker(*joint_widgets_[i].slider);
             joint_widgets_[i].slider->setValue(static_cast<int>(std::lround(value)));
             publishJointReference_(static_cast<int>(i), value, false);
@@ -284,7 +366,8 @@ void ControlPanelPage::connectSignals_() {
     connect(export_recording_btn_, &QPushButton::clicked, this, &ControlPanelPage::onExportRecordingClicked_);
 }
 
-void ControlPanelPage::applyAngleRanges_() {
+void ControlPanelPage::applyAngleRanges_()
+{
     double min_deg = 0.0;
     double max_deg = 360.0;
 
@@ -296,7 +379,9 @@ void ControlPanelPage::applyAngleRanges_() {
 
     for (auto& joint : joint_widgets_) {
         if (joint.slider) {
-            joint.slider->setRange(static_cast<int>(std::floor(min_deg)), static_cast<int>(std::ceil(max_deg)));
+            joint.slider->setRange(
+                static_cast<int>(std::floor(min_deg)),
+                static_cast<int>(std::ceil(max_deg)));
         }
         if (joint.spin) {
             joint.spin->setRange(min_deg, max_deg);
@@ -304,14 +389,17 @@ void ControlPanelPage::applyAngleRanges_() {
     }
 }
 
-void ControlPanelPage::updateRecordingUi_() {
-    if (!recording_progress_) return;
+void ControlPanelPage::updateRecordingUi_()
+{
+    if (!recording_progress_) {
+        return;
+    }
 
     if (!recorder_service_) {
         recording_progress_->setValue(0);
-        if (export_recording_btn_) export_recording_btn_->setEnabled(false);
-        if (start_recording_btn_) start_recording_btn_->setEnabled(true);
-        if (stop_recording_btn_) stop_recording_btn_->setEnabled(true);
+        if (export_recording_btn_) {
+            export_recording_btn_->setEnabled(false);
+        }
         return;
     }
 
@@ -325,8 +413,6 @@ void ControlPanelPage::updateRecordingUi_() {
         recording_progress_->setValue(0);
         break;
     case davinci_arm::models::RecordingState::Recording:
-        recording_progress_->setValue(std::clamp(progress, 0, 100));
-        break;
     case davinci_arm::models::RecordingState::Stopped:
         recording_progress_->setValue(std::clamp(progress, 0, 100));
         break;
@@ -340,26 +426,55 @@ void ControlPanelPage::updateRecordingUi_() {
     }
 }
 
-void ControlPanelPage::updateChartTitles_() {
+void ControlPanelPage::updateChartTitles_()
+{
     const QString focused = labelForJoint_(active_joint_index_);
-    if (angle_ref_plot_) {
-        setChartTitle(angle_ref_plot_, focused + " | reference vs response");
+    setChartTitle(angle_ref_plot_, focused + " | reference vs response");
+    setChartTitle(error_plot_, focused + " | tracking error");
+}
+
+void ControlPanelPage::updateAdaptiveDensity_(Domain domain, double t_sec) noexcept
+{
+    sample_rate_estimator_.observe(domain, t_sec);
+    const auto dt = sample_rate_estimator_.dtEma(domain);
+    if (!dt.has_value()) {
+        return;
     }
-    if (error_plot_) {
-        setChartTitle(error_plot_, focused + " | tracking error");
+
+    const int max_points =
+        davinci_arm::core::charts::SampleRateEstimator::recommendedMaxPoints(
+            kChartWindowSeconds,
+            *dt);
+
+    if (auto* chart = chartOf(angle_ref_plot_)) {
+        chart->setMaxPoints(max_points);
+    }
+    if (auto* chart = chartOf(error_plot_)) {
+        chart->setMaxPoints(max_points);
     }
 }
 
-void ControlPanelPage::setActiveJointIndex_(int index) {
+void ControlPanelPage::setActiveJointIndex_(int index)
+{
     active_joint_index_ = std::clamp(index, 0, static_cast<int>(kJointCount) - 1);
     updateChartTitles_();
+
+    sample_rate_estimator_.clear();
+    if (angle_ref_plot_) {
+        angle_ref_plot_->clear();
+    }
+    if (error_plot_) {
+        error_plot_->clear();
+    }
 }
 
-int ControlPanelPage::activeJointIndex_() const noexcept {
+int ControlPanelPage::activeJointIndex_() const noexcept
+{
     return active_joint_index_;
 }
 
-QVector<double> ControlPanelPage::collectJointRefsDeg_() const {
+QVector<double> ControlPanelPage::collectJointRefsDeg_() const
+{
     QVector<double> values;
     values.reserve(static_cast<int>(kJointCount));
     for (const auto& joint : joint_widgets_) {
@@ -368,8 +483,11 @@ QVector<double> ControlPanelPage::collectJointRefsDeg_() const {
     return values;
 }
 
-void ControlPanelPage::publishJointReference_(int jointIndex, double deg, bool force) {
-    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) return;
+void ControlPanelPage::publishJointReference_(int jointIndex, double deg, bool force)
+{
+    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) {
+        return;
+    }
 
     const qint64 now_ms = QDateTime::currentMSecsSinceEpoch();
     if (!force && (now_ms - last_emit_ms_[static_cast<std::size_t>(jointIndex)]) < kEmitThrottleMs) {
@@ -377,59 +495,80 @@ void ControlPanelPage::publishJointReference_(int jointIndex, double deg, bool f
     }
     last_emit_ms_[static_cast<std::size_t>(jointIndex)] = now_ms;
 
-    const QString topic = topicForJoint_(jointIndex);
-    const double rad = deg * kDegToRad;
-
     emit jointReferenceChanged(jointIndex, deg);
-    emit jointTopicReferenceRequested(topic, rad);
-
-    if (jointIndex == active_joint_index_) {
-        emit refAngleChanged(rad);
-    }
+    emit jointBatchCommandRequested(collectJointRefsDeg_());
 }
 
-void ControlPanelPage::setJointUiDeg_(int jointIndex, double deg) {
-    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) return;
+void ControlPanelPage::setJointUiDeg_(int jointIndex, double deg)
+{
+    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) {
+        return;
+    }
 
     auto& joint = joint_widgets_[static_cast<std::size_t>(jointIndex)];
-    if (!joint.slider || !joint.spin) return;
+    if (!joint.slider || !joint.spin) {
+        return;
+    }
 
     const double clamped = std::clamp(deg, joint.spin->minimum(), joint.spin->maximum());
-    {
-        const QSignalBlocker spin_blocker(*joint.spin);
-        const QSignalBlocker slider_blocker(*joint.slider);
-        joint.spin->setValue(clamped);
-        joint.slider->setValue(static_cast<int>(std::lround(clamped)));
-    }
+    const QSignalBlocker spin_blocker(*joint.spin);
+    const QSignalBlocker slider_blocker(*joint.slider);
+    joint.spin->setValue(clamped);
+    joint.slider->setValue(static_cast<int>(std::lround(clamped)));
 }
 
-void ControlPanelPage::applyAllZero_() {
+void ControlPanelPage::applyAllZero_()
+{
     for (int i = 0; i < static_cast<int>(kJointCount); ++i) {
         setJointUiDeg_(i, 0.0);
-        publishJointReference_(i, 0.0, true);
     }
     emit jointBatchCommandRequested(collectJointRefsDeg_());
 }
 
-QString ControlPanelPage::topicForJoint_(int jointIndex) const {
-    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) return {};
-    return QString::fromUtf8(kJointSpecs[static_cast<std::size_t>(jointIndex)].topic);
-}
-
-QString ControlPanelPage::labelForJoint_(int jointIndex) const {
-    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) return QStringLiteral("Joint");
+QString ControlPanelPage::labelForJoint_(int jointIndex) const
+{
+    if (jointIndex < 0 || jointIndex >= static_cast<int>(kJointCount)) {
+        return QStringLiteral("Joint");
+    }
     return QString::fromUtf8(kJointSpecs[static_cast<std::size_t>(jointIndex)].label);
 }
 
-void ControlPanelPage::onFocusButtonClicked_(int index) {
+QString ControlPanelPage::activeJointName_() const
+{
+    if (active_joint_index_ < 0 || active_joint_index_ >= static_cast<int>(kJointCount)) {
+        return {};
+    }
+    return QString::fromUtf8(kJointSpecs[static_cast<std::size_t>(active_joint_index_)].joint_name);
+}
+
+int ControlPanelPage::resolveJointIndex_(const davinci_arm::models::TelemetrySample& sample) const noexcept
+{
+    const auto sample_joint = jointNameOf(sample);
+    if (!sample_joint.has_value()) {
+        return -1;
+    }
+
+    for (std::size_t i = 0; i < kJointSpecs.size(); ++i) {
+        if (*sample_joint == kJointSpecs[i].joint_name) {
+            return static_cast<int>(i);
+        }
+    }
+
+    return -1;
+}
+
+void ControlPanelPage::onFocusButtonClicked_(int index)
+{
     setActiveJointIndex_(index);
 }
 
-void ControlPanelPage::onZeroAllClicked_() {
+void ControlPanelPage::onZeroAllClicked_()
+{
     applyAllZero_();
 }
 
-void ControlPanelPage::onStartRecordingClicked_() {
+void ControlPanelPage::onStartRecordingClicked_()
+{
     if (recorder_service_) {
         recorder_service_->start(recording_duration_ ? recording_duration_->value() : 0.0);
     }
@@ -437,7 +576,8 @@ void ControlPanelPage::onStartRecordingClicked_() {
     emit startRecordingRequested(recording_duration_ ? recording_duration_->value() : 0.0);
 }
 
-void ControlPanelPage::onStopRecordingClicked_() {
+void ControlPanelPage::onStopRecordingClicked_()
+{
     if (recorder_service_) {
         recorder_service_->stop();
     }
@@ -445,7 +585,8 @@ void ControlPanelPage::onStopRecordingClicked_() {
     emit stopRecordingRequested();
 }
 
-void ControlPanelPage::onExportRecordingClicked_() {
+void ControlPanelPage::onExportRecordingClicked_()
+{
     emit exportRecordingRequested();
 
     if (!recorder_service_) {
@@ -461,7 +602,9 @@ void ControlPanelPage::onExportRecordingClicked_() {
 
     QVector<davinci_arm::models::TelemetrySample> samples;
     samples.reserve(static_cast<int>(recorded.size()));
-    for (const auto& sample : recorded) samples.push_back(sample);
+    for (const auto& sample : recorded) {
+        samples.push_back(sample);
+    }
 
     davinci_arm::models::CsvExportOptions default_opts;
     default_opts.include_header_comments = true;
@@ -482,12 +625,33 @@ void ControlPanelPage::onExportRecordingClicked_() {
     dialog->setSamples(samples);
     dialog->setDefaultOptions(default_opts);
     dialog->setDefaultFilename(
-        QStringLiteral("DavinciArm_recording_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss")));
+        QStringLiteral("DavinciArm_recording_%1.csv")
+        .arg(QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss")));
     dialog->open();
 }
 
-void ControlPanelPage::onTelemetry(const davinci_arm::models::TelemetrySample& sample) {
-    if (!sample.valid) return;
+void ControlPanelPage::onTelemetry(const davinci_arm::models::TelemetrySample& sample)
+{
+    if (!sample.valid) {
+        return;
+    }
+
+    const auto signal = signalTypeOf(sample);
+    if (!signal.has_value()) {
+        return;
+    }
+
+    if (*signal != TelemetrySignalType::Angle && *signal != TelemetrySignalType::AngleRef) {
+        return;
+    }
+
+    if (resolveJointIndex_(sample) != active_joint_index_) {
+        return;
+    }
+
+    if (const auto t_sec = timeSecOf(sample); t_sec.has_value()) {
+        updateAdaptiveDensity_(sample.domain, *t_sec);
+    }
 
     if (angle_ref_plot_) {
         angle_ref_plot_->pushSample(sample);
@@ -499,7 +663,8 @@ void ControlPanelPage::onTelemetry(const davinci_arm::models::TelemetrySample& s
     updateRecordingUi_();
 }
 
-void ControlPanelPage::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+void ControlPanelPage::setStreamLive(davinci_arm::models::Domain domain, bool live)
+{
     if (angle_ref_plot_) {
         angle_ref_plot_->setStreamLive(domain, live);
     }
@@ -507,9 +672,9 @@ void ControlPanelPage::setStreamLive(davinci_arm::models::Domain domain, bool li
         error_plot_->setStreamLive(domain, live);
     }
 
-    if (domain == davinci_arm::models::Domain::Real) {
+    if (domain == Domain::Real) {
         real_live_ = live;
-    } else if (domain == davinci_arm::models::Domain::Sim) {
+    } else if (domain == Domain::Sim) {
         sim_live_ = live;
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "davinci_arm_gui/core/services/calibration_service.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
+#include "davinci_arm_gui/core/services/calibration_service.hpp"
 
 #include <cstdint>
 
@@ -9,7 +9,8 @@ namespace davinci_arm::infra::ros {
 
 class DavinciArmRosBridge;
 
-class DavinciArmRosBridgeCommandSink final : public davinci_arm::services::ICalibrationCommandSink {
+class DavinciArmRosBridgeCommandSink final
+    : public davinci_arm::services::ICalibrationCommandSink {
 public:
     explicit DavinciArmRosBridgeCommandSink(DavinciArmRosBridge* bridge) noexcept;
 

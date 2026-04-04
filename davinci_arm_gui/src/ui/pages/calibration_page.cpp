@@ -1,5 +1,7 @@
 #include "davinci_arm_gui/ui/pages/calibration_page.hpp"
 
+#include "davinci_arm_gui/core/charts/sample_rate_estimator.hpp"
+#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/angle_ref_plot.hpp"
 #include "davinci_arm_gui/ui/widgets/chart_base.hpp"
@@ -12,12 +14,10 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QHeaderView>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QProgressBar>
 #include <QPushButton>
-#include <QSignalBlocker>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -25,27 +25,36 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <optional>
+#include <string>
+#include <type_traits>
 
 namespace davinci_arm::ui::pages {
 
 namespace {
 
+using davinci_arm::models::Domain;
+using davinci_arm::models::TelemetrySignalType;
+
 constexpr double kRadToDeg = 180.0 / M_PI;
+constexpr double kChartWindowSeconds = 30.0;
 constexpr std::size_t kJointCount = 5;
 
 struct JointSpec final {
     const char* label;
+    const char* joint_name;
 };
 
 constexpr std::array<JointSpec, kJointCount> kJointSpecs{{
-        {"Shoulder"},
-        {"Bicep"},
-        {"Arm"},
-        {"Wrist"},
-        {"End Effector"},
+        {"Shoulder", "shoulder_link_joint"},
+        {"Bicep", "bicep_link_joint"},
+        {"Arm", "arm_link_joint"},
+        {"Wrist", "wrist_link_joint"},
+        {"End Effector", "end_effector_link_joint"},
     }};
 
-QFrame* makePanel(QWidget* parent) {
+QFrame* makePanel(QWidget* parent)
+{
     auto* panel = new QFrame(parent);
     panel->setObjectName("panel");
     panel->setFrameShape(QFrame::NoFrame);
@@ -59,13 +68,23 @@ QFrame* makePanel(QWidget* parent) {
     return panel;
 }
 
-void setChartTitle(QWidget* host, const QString& title) {
-    if (!host) return;
-    auto* chart = host->findChild<davinci_arm::ui::widgets::ChartBase*>();
-    if (chart) chart->setTitle(title);
+davinci_arm::ui::widgets::ChartBase* chartOf(QWidget* host)
+{
+    if (!host) {
+        return nullptr;
+    }
+    return host->findChild<davinci_arm::ui::widgets::ChartBase*>();
 }
 
-QPushButton* makeFocusButton(const QString& text, QWidget* parent) {
+void setChartTitle(QWidget* host, const QString& title)
+{
+    if (auto* chart = chartOf(host)) {
+        chart->setTitle(title);
+    }
+}
+
+QPushButton* makeFocusButton(const QString& text, QWidget* parent)
+{
     auto* btn = new QPushButton(text, parent);
     btn->setCheckable(true);
     btn->setMinimumHeight(38);
@@ -85,16 +104,107 @@ QPushButton* makeFocusButton(const QString& text, QWidget* parent) {
     return btn;
 }
 
-QPushButton* makeActionButton(const QString& text, QWidget* parent) {
+QPushButton* makeActionButton(const QString& text, QWidget* parent)
+{
     auto* btn = new QPushButton(text, parent);
     btn->setMinimumHeight(38);
     return btn;
 }
 
+template<typename T>
+std::optional<std::string> jointNameOf(const T& sample)
+{
+    if constexpr (requires { sample.joint_name; }) {
+        return sample.joint_name;
+    } else if constexpr (requires { sample.label; }) {
+        return sample.label;
+    } else if constexpr (requires { sample.series; }) {
+        return sample.series;
+    } else if constexpr (requires { sample.channel; }) {
+        return sample.channel;
+    } else {
+        return std::nullopt;
+    }
+}
+
+template<typename T>
+std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
+{
+    if constexpr (requires { sample.signal; }) {
+        return sample.signal;
+    } else if constexpr (requires { sample.signal_type; }) {
+        return sample.signal_type;
+    } else if constexpr (requires { sample.telemetry_signal; }) {
+        return sample.telemetry_signal;
+    } else {
+        return std::nullopt;
+    }
+}
+
+template<typename T>
+std::optional<double> timeSecOf(const T& sample)
+{
+    if constexpr (requires { sample.time_sec; }) {
+        return static_cast<double>(sample.time_sec);
+    } else if constexpr (requires { sample.timestamp_sec; }) {
+        return static_cast<double>(sample.timestamp_sec);
+    } else if constexpr (requires { sample.t_sec; }) {
+        return static_cast<double>(sample.t_sec);
+    } else if constexpr (requires { sample.time_s; }) {
+        return static_cast<double>(sample.time_s);
+    } else {
+        return std::nullopt;
+    }
+}
+
+davinci_arm::core::charts::SampleRateEstimator g_rate_estimator;
+
+int resolveJointIndex(const davinci_arm::models::TelemetrySample& sample)
+{
+    const auto sample_joint = jointNameOf(sample);
+    if (!sample_joint.has_value()) {
+        return -1;
+    }
+
+    for (std::size_t i = 0; i < kJointSpecs.size(); ++i) {
+        if (*sample_joint == kJointSpecs[i].joint_name) {
+            return static_cast<int>(i);
+        }
+    }
+
+    return -1;
+}
+
+void updateAdaptiveDensity(
+    davinci_arm::ui::widgets::AngleRefPlot* angle_ref_plot,
+    davinci_arm::ui::widgets::ErrorPlot* error_plot,
+    Domain domain,
+    double t_sec)
+{
+    g_rate_estimator.observe(domain, t_sec);
+    const auto dt = g_rate_estimator.dtEma(domain);
+    if (!dt.has_value()) {
+        return;
+    }
+
+    const int max_points =
+        davinci_arm::core::charts::SampleRateEstimator::recommendedMaxPoints(
+            kChartWindowSeconds,
+            *dt);
+
+    if (auto* chart = chartOf(angle_ref_plot)) {
+        chart->setMaxPoints(max_points);
+    }
+    if (auto* chart = chartOf(error_plot)) {
+        chart->setMaxPoints(max_points);
+    }
+}
+
 }  // namespace
 
 CalibrationPage::CalibrationPage(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+{
     buildUi_();
     connectSignals_();
     applyAngleRanges_();
@@ -102,18 +212,21 @@ CalibrationPage::CalibrationPage(QWidget* parent)
     updateStatusUi_(QStringLiteral("Idle"), 0);
 }
 
-void CalibrationPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void CalibrationPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
+{
     limits_ = limits;
     if (angle_ref_plot_) angle_ref_plot_->setLimitsRegistry(limits_);
     if (error_plot_) error_plot_->setLimitsRegistry(limits_);
     applyAngleRanges_();
 }
 
-void CalibrationPage::setCalibrationService(davinci_arm::services::CalibrationService* service) noexcept {
+void CalibrationPage::setCalibrationService(davinci_arm::services::CalibrationService* service) noexcept
+{
     calibration_service_ = service;
 }
 
-void CalibrationPage::buildUi_() {
+void CalibrationPage::buildUi_()
+{
     auto* root = new QHBoxLayout(this);
     root->setContentsMargins(16, 16, 16, 16);
     root->setSpacing(16);
@@ -122,7 +235,8 @@ void CalibrationPage::buildUi_() {
     root->addWidget(buildRightColumn_(), 7);
 }
 
-QWidget* CalibrationPage::buildLeftColumn_() {
+QWidget* CalibrationPage::buildLeftColumn_()
+{
     auto* left = new QWidget(this);
     auto* layout = new QVBoxLayout(left);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -137,7 +251,8 @@ QWidget* CalibrationPage::buildLeftColumn_() {
     return left;
 }
 
-QWidget* CalibrationPage::buildRightColumn_() {
+QWidget* CalibrationPage::buildRightColumn_()
+{
     auto* right = new QWidget(this);
     auto* layout = new QVBoxLayout(right);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -149,13 +264,21 @@ QWidget* CalibrationPage::buildRightColumn_() {
     error_plot_ = new davinci_arm::ui::widgets::ErrorPlot(right);
     error_plot_->setMinimumHeight(300);
 
+    if (auto* chart = chartOf(angle_ref_plot_)) {
+        chart->setWindowSeconds(kChartWindowSeconds);
+    }
+    if (auto* chart = chartOf(error_plot_)) {
+        chart->setWindowSeconds(kChartWindowSeconds);
+    }
+
     layout->addWidget(angle_ref_plot_, 1);
     layout->addWidget(error_plot_, 1);
 
     return right;
 }
 
-QWidget* CalibrationPage::buildFocusPanel_() {
+QWidget* CalibrationPage::buildFocusPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QGridLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -179,7 +302,8 @@ QWidget* CalibrationPage::buildFocusPanel_() {
     return panel;
 }
 
-QWidget* CalibrationPage::buildConfigPanel_() {
+QWidget* CalibrationPage::buildConfigPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QGridLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -217,15 +341,12 @@ QWidget* CalibrationPage::buildConfigPanel_() {
     layout->addWidget(amplitude_spin_, 1, 0, 1, 2);
     layout->addWidget(duration_spin_, 1, 2);
     layout->addWidget(repetitions_spin_, 1, 3);
-    layout->setColumnStretch(0, 1);
-    layout->setColumnStretch(1, 1);
-    layout->setColumnStretch(2, 1);
-    layout->setColumnStretch(3, 1);
 
     return panel;
 }
 
-QWidget* CalibrationPage::buildActionPanel_() {
+QWidget* CalibrationPage::buildActionPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QGridLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -252,15 +373,12 @@ QWidget* CalibrationPage::buildActionPanel_() {
     layout->addWidget(stop_btn_, 1, 1);
     layout->addWidget(apply_btn_, 1, 2);
     layout->addWidget(reset_btn_, 1, 3);
-    layout->setColumnStretch(0, 1);
-    layout->setColumnStretch(1, 1);
-    layout->setColumnStretch(2, 1);
-    layout->setColumnStretch(3, 1);
 
     return panel;
 }
 
-QWidget* CalibrationPage::buildParameterPanel_() {
+QWidget* CalibrationPage::buildParameterPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QVBoxLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -285,7 +403,8 @@ QWidget* CalibrationPage::buildParameterPanel_() {
     return panel;
 }
 
-QWidget* CalibrationPage::buildLogPanel_() {
+QWidget* CalibrationPage::buildLogPanel_()
+{
     auto* panel = makePanel(this);
     auto* layout = new QVBoxLayout(panel);
     layout->setContentsMargins(14, 14, 14, 14);
@@ -300,7 +419,8 @@ QWidget* CalibrationPage::buildLogPanel_() {
     return panel;
 }
 
-void CalibrationPage::connectSignals_() {
+void CalibrationPage::connectSignals_()
+{
     if (focus_group_) {
         connect(focus_group_, &QButtonGroup::idClicked, this, &CalibrationPage::onFocusButtonClicked_);
     }
@@ -311,7 +431,8 @@ void CalibrationPage::connectSignals_() {
     connect(reset_btn_, &QPushButton::clicked, this, &CalibrationPage::onResetClicked_);
 }
 
-void CalibrationPage::applyAngleRanges_() {
+void CalibrationPage::applyAngleRanges_()
+{
     if (!limits_) return;
 
     const auto& angle_limits = limits_->angleLimits();
@@ -320,18 +441,21 @@ void CalibrationPage::applyAngleRanges_() {
     }
 }
 
-void CalibrationPage::updateChartTitles_() {
+void CalibrationPage::updateChartTitles_()
+{
     const QString joint = labelForJoint_(activeJointIndex_());
     setChartTitle(angle_ref_plot_, QStringLiteral("Calibration response · %1").arg(joint));
     setChartTitle(error_plot_, QStringLiteral("Calibration error · %1").arg(joint));
 }
 
-void CalibrationPage::updateStatusUi_(const QString& status, int progress_pct) {
+void CalibrationPage::updateStatusUi_(const QString& status, int progress_pct)
+{
     if (status_value_) status_value_->setText(status);
     if (progress_bar_) progress_bar_->setValue(std::clamp(progress_pct, 0, 100));
 }
 
-void CalibrationPage::updateParameterEstimates_(double real_deg, double ref_deg) {
+void CalibrationPage::updateParameterEstimates_(double real_deg, double ref_deg)
+{
     if (!identified_params_table_) return;
 
     const double error_deg = ref_deg - real_deg;
@@ -343,49 +467,61 @@ void CalibrationPage::updateParameterEstimates_(double real_deg, double ref_deg)
     identified_params_table_->item(5, 1)->setText(QString::number(std::fabs(error_deg) * 0.02, 'f', 3));
 }
 
-int CalibrationPage::activeJointIndex_() const noexcept {
+int CalibrationPage::activeJointIndex_() const noexcept
+{
     return active_joint_index_;
 }
 
-QString CalibrationPage::labelForJoint_(int joint_index) const {
+QString CalibrationPage::labelForJoint_(int joint_index) const
+{
     const int idx = std::clamp(joint_index, 0, static_cast<int>(kJointSpecs.size()) - 1);
     return QString::fromUtf8(kJointSpecs[static_cast<std::size_t>(idx)].label);
 }
 
-davinci_arm::models::CalibrationConfig CalibrationPage::buildConfig_() const {
+davinci_arm::models::CalibrationConfig CalibrationPage::buildConfig_() const
+{
     davinci_arm::models::CalibrationConfig cfg{};
     if (duration_spin_) cfg.duration_sec = duration_spin_->value();
     return cfg;
 }
 
-void CalibrationPage::onFocusButtonClicked_(int index) {
+void CalibrationPage::onFocusButtonClicked_(int index)
+{
     active_joint_index_ = std::clamp(index, 0, static_cast<int>(kJointCount) - 1);
     updateChartTitles_();
+    g_rate_estimator.clear();
+    if (angle_ref_plot_) angle_ref_plot_->clear();
+    if (error_plot_) error_plot_->clear();
 }
 
-void CalibrationPage::onStartClicked_() {
+void CalibrationPage::onStartClicked_()
+{
     updateStatusUi_(QStringLiteral("Running"), 5);
     if (notes_log_) notes_log_->appendPlainText(QStringLiteral("Calibration started."));
     emit startCalibrationRequested(buildConfig_());
 }
 
-void CalibrationPage::onStopClicked_() {
+void CalibrationPage::onStopClicked_()
+{
     updateStatusUi_(QStringLiteral("Stopped"), progress_bar_ ? progress_bar_->value() : 0);
     if (notes_log_) notes_log_->appendPlainText(QStringLiteral("Calibration stopped."));
     emit stopCalibrationRequested();
 }
 
-void CalibrationPage::onApplyClicked_() {
+void CalibrationPage::onApplyClicked_()
+{
     if (notes_log_) notes_log_->appendPlainText(QStringLiteral("Apply identified parameters requested."));
     emit applyParametersRequested();
 }
 
-void CalibrationPage::onResetClicked_() {
+void CalibrationPage::onResetClicked_()
+{
     updateStatusUi_(QStringLiteral("Idle"), 0);
 
     if (notes_log_) notes_log_->appendPlainText(QStringLiteral("Calibration reset."));
     if (angle_ref_plot_) angle_ref_plot_->clear();
     if (error_plot_) error_plot_->clear();
+    g_rate_estimator.clear();
 
     if (identified_params_table_) {
         for (int row = 0; row < identified_params_table_->rowCount(); ++row) {
@@ -398,7 +534,8 @@ void CalibrationPage::onResetClicked_() {
     emit resetCalibrationRequested();
 }
 
-void CalibrationPage::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+void CalibrationPage::setStreamLive(davinci_arm::models::Domain domain, bool live)
+{
     if (domain == davinci_arm::models::Domain::Real) {
         real_live_ = live;
     } else if (domain == davinci_arm::models::Domain::Sim) {
@@ -409,22 +546,31 @@ void CalibrationPage::setStreamLive(davinci_arm::models::Domain domain, bool liv
     if (error_plot_) error_plot_->setStreamLive(domain, live);
 }
 
-void CalibrationPage::onTelemetry(const davinci_arm::models::TelemetrySample& sample) {
+void CalibrationPage::onTelemetry(const davinci_arm::models::TelemetrySample& sample)
+{
     if (!sample.valid) return;
+
+    const auto signal = signalTypeOf(sample);
+    if (!signal.has_value()) return;
+    if (*signal != TelemetrySignalType::Angle && *signal != TelemetrySignalType::AngleRef) return;
+
+    if (resolveJointIndex(sample) != active_joint_index_) return;
+
+    if (const auto t_sec = timeSecOf(sample); t_sec.has_value()) {
+        updateAdaptiveDensity(angle_ref_plot_, error_plot_, sample.domain, *t_sec);
+    }
 
     if (angle_ref_plot_) angle_ref_plot_->pushSample(sample);
     if (error_plot_) error_plot_->pushSample(sample);
 
     const double angle_deg = sample.arm_angle_rad * kRadToDeg;
     const double ref_deg = sample.ref_angle_rad * kRadToDeg;
-
     updateParameterEstimates_(angle_deg, ref_deg);
 
-    const QString status = (sample.domain == davinci_arm::models::Domain::Real)
-                           ? QStringLiteral("Real feedback")
-                           : (sample.domain == davinci_arm::models::Domain::Sim)
-                           ? QStringLiteral("Sim feedback")
-                           : QStringLiteral("Reference only");
+    const QString status =
+        (sample.domain == davinci_arm::models::Domain::Real) ? QStringLiteral("Real feedback")
+        : (sample.domain == davinci_arm::models::Domain::Sim) ? QStringLiteral("Sim feedback")
+        : QStringLiteral("Reference only");
 
     const int next_progress = progress_bar_ ? std::min(progress_bar_->value() + 1, 100) : 0;
     updateStatusUi_(status, next_progress);

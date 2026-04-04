@@ -4,12 +4,15 @@
 
 namespace davinci_arm::infra::ros {
 
-DavinciArmRosBridgeCommandSink::DavinciArmRosBridgeCommandSink(DavinciArmRosBridge* bridge) noexcept
+DavinciArmRosBridgeCommandSink::DavinciArmRosBridgeCommandSink(
+    DavinciArmRosBridge* bridge) noexcept
     : bridge_(bridge)
 {
 }
 
-void DavinciArmRosBridgeCommandSink::sendPwmUs(davinci_arm::models::Domain domain, std::uint16_t pwm_us)
+void DavinciArmRosBridgeCommandSink::sendPwmUs(
+    davinci_arm::models::Domain domain,
+    std::uint16_t pwm_us)
 {
     if (!bridge_) {
         return;
@@ -17,7 +20,9 @@ void DavinciArmRosBridgeCommandSink::sendPwmUs(davinci_arm::models::Domain domai
     bridge_->sendPwmCommand(domain, pwm_us);
 }
 
-void DavinciArmRosBridgeCommandSink::sendRefAngleRad(davinci_arm::models::Domain domain, double ref_angle_rad)
+void DavinciArmRosBridgeCommandSink::sendRefAngleRad(
+    davinci_arm::models::Domain domain,
+    double ref_angle_rad)
 {
     if (!bridge_) {
         return;
@@ -25,7 +30,9 @@ void DavinciArmRosBridgeCommandSink::sendRefAngleRad(davinci_arm::models::Domain
     bridge_->sendAngleReference(domain, ref_angle_rad);
 }
 
-void DavinciArmRosBridgeCommandSink::sendAutoMode(davinci_arm::models::Domain domain, bool enabled)
+void DavinciArmRosBridgeCommandSink::sendAutoMode(
+    davinci_arm::models::Domain domain,
+    bool enabled)
 {
     if (!bridge_) {
         return;

@@ -11,10 +11,11 @@ using davinci_arm::models::TelemetrySignalType;
 
 namespace {
 
-std::string getStringEither(rclcpp::Node& node,
-                            const std::string& primary,
-                            const std::string& legacy,
-                            const std::string& fallback)
+std::string getStringEither(
+    rclcpp::Node& node,
+    const std::string& primary,
+    const std::string& legacy,
+    const std::string& fallback)
 {
     if (!node.has_parameter(primary)) {
         node.declare_parameter<std::string>(primary, fallback);
@@ -65,10 +66,10 @@ std::vector<std::string> getStringArrayEither(
 TopicRegistry::TopicRegistry(rclcpp::Node& node)
 {
     if (!node.has_parameter("topic_ns.real")) {
-        node.declare_parameter<std::string>("topic_ns.real", "/arm");
+        node.declare_parameter<std::string>("topic_ns.real", "/davinci_arm/real");
     }
     if (!node.has_parameter("topic_ns.sim")) {
-        node.declare_parameter<std::string>("topic_ns.sim", "/arm_sim");
+        node.declare_parameter<std::string>("topic_ns.sim", "/davinci_arm");
     }
 
     real_ns_ = normalizeNs_(node.get_parameter("topic_ns.real").as_string());
@@ -97,51 +98,60 @@ TopicRegistry::TopicRegistry(rclcpp::Node& node)
 
     real_joint_states_topic_ = normalizeTopic_(getStringEither(
                                    node,
+                                   "topics.telemetry.real_joint_states",
                                    "topics.ros.real_joint_states",
-                                   "topic.ros.real_joint_states",
-                                   "/real/joint_states"));
+                                   "/davinci_arm/real/joint_states"));
 
     sim_joint_states_topic_ = normalizeTopic_(getStringEither(
                                   node,
+                                  "topics.telemetry.sim_joint_states",
                                   "topics.ros.sim_joint_states",
-                                  "topic.ros.sim_joint_states",
                                   "/joint_states"));
 
     controller_state_topic_ = normalizeTopic_(getStringEither(
                                   node,
+                                  "topics.telemetry.controller_state",
                                   "topics.ros.controller_state",
-                                  "topic.ros.controller_state",
                                   "/davinci_arm_controller/controller_state"));
 
     display_planned_path_topic_ = normalizeTopic_(getStringEither(
                                       node,
+                                      "topics.telemetry.display_planned_path",
                                       "topics.ros.display_planned_path",
-                                      "topic.ros.display_planned_path",
                                       "/display_planned_path"));
 
     planning_scene_topic_ = normalizeTopic_(getStringEither(
             node,
+            "topics.telemetry.planning_scene",
             "topics.ros.planning_scene",
-            "topic.ros.planning_scene",
             "/planning_scene"));
 
     trajectory_execution_event_topic_ = normalizeTopic_(getStringEither(
                                             node,
+                                            "topics.telemetry.trajectory_execution_event",
                                             "topics.ros.trajectory_execution_event",
-                                            "topic.ros.trajectory_execution_event",
                                             "/trajectory_execution_event"));
 
-    real_joint_trajectory_cmd_topic_ = normalizeTopic_(getStringEither(
-                                           node,
-                                           "topics.ros.real_joint_trajectory_command",
-                                           "topic.ros.real_joint_trajectory_command",
-                                           "/real/davinci_arm_controller/joint_trajectory"));
+    for (const auto& joint_name : joint_names_) {
+        const auto leaf = defaultCommandLeafFromJoint_(joint_name);
 
-    sim_joint_trajectory_cmd_topic_ = normalizeTopic_(getStringEither(
-                                          node,
-                                          "topics.ros.sim_joint_trajectory_command",
-                                          "topic.ros.sim_joint_trajectory_command",
-                                          "/davinci_arm_controller/joint_trajectory"));
+        const auto sim_param = "topics.commands.per_joint.sim." + joint_name;
+        const auto real_param = "topics.commands.per_joint.real." + joint_name;
+
+        if (!node.has_parameter(sim_param)) {
+            node.declare_parameter<std::string>(sim_param, join_(sim_ns_, leaf));
+        }
+        if (!node.has_parameter(real_param)) {
+            node.declare_parameter<std::string>(real_param, join_(real_ns_, leaf));
+        }
+
+        sim_joint_command_topics_.emplace(
+            joint_name,
+            normalizeTopic_(node.get_parameter(sim_param).as_string()));
+        real_joint_command_topics_.emplace(
+            joint_name,
+            normalizeTopic_(node.get_parameter(real_param).as_string()));
+    }
 }
 
 std::string TopicRegistry::normalizeNs_(std::string ns)
@@ -149,7 +159,6 @@ std::string TopicRegistry::normalizeNs_(std::string ns)
     if (ns.empty()) {
         return ns;
     }
-
     if (ns.front() != '/') {
         ns.insert(ns.begin(), '/');
     }
@@ -182,6 +191,40 @@ std::string TopicRegistry::join_(const std::string& ns, const std::string& name)
         return "/" + name;
     }
     return ns + "/" + name;
+}
+
+std::string TopicRegistry::stripJointSuffix_(std::string joint_name)
+{
+    static constexpr const char* kLinkJointSuffix = "_link_joint";
+    static constexpr const char* kJointSuffix = "_joint";
+
+    if (joint_name.size() >= std::char_traits<char>::length(kLinkJointSuffix) &&
+            joint_name.compare(
+                joint_name.size() - std::char_traits<char>::length(kLinkJointSuffix),
+                std::char_traits<char>::length(kLinkJointSuffix),
+                kLinkJointSuffix) == 0)
+    {
+        joint_name.erase(
+            joint_name.size() - std::char_traits<char>::length(kLinkJointSuffix));
+        return joint_name;
+    }
+
+    if (joint_name.size() >= std::char_traits<char>::length(kJointSuffix) &&
+            joint_name.compare(
+                joint_name.size() - std::char_traits<char>::length(kJointSuffix),
+                std::char_traits<char>::length(kJointSuffix),
+                kJointSuffix) == 0)
+    {
+        joint_name.erase(
+            joint_name.size() - std::char_traits<char>::length(kJointSuffix));
+    }
+
+    return joint_name;
+}
+
+std::string TopicRegistry::defaultCommandLeafFromJoint_(const std::string& joint_name)
+{
+    return stripJointSuffix_(joint_name) + "_cmd_pos";
 }
 
 std::string TopicRegistry::topic(Domain domain, TelemetrySignalType signal) const
@@ -220,6 +263,19 @@ std::string TopicRegistry::topic(Domain domain, CommandType command) const
     }
 
     throw std::runtime_error("TopicRegistry::topic(): unsupported CommandType");
+}
+
+std::string TopicRegistry::jointPositionCommandTopic(
+    Domain domain,
+    const std::string& joint_name) const
+{
+    const auto& map = (domain == Domain::Real) ? real_joint_command_topics_ : sim_joint_command_topics_;
+    const auto it = map.find(joint_name);
+    if (it == map.end()) {
+        throw std::runtime_error(
+            "TopicRegistry::jointPositionCommandTopic(): unknown joint '" + joint_name + "'");
+    }
+    return it->second;
 }
 
 const std::vector<std::string>& TopicRegistry::jointNames() const noexcept
@@ -265,16 +321,6 @@ const std::string& TopicRegistry::planningSceneTopic() const noexcept
 const std::string& TopicRegistry::trajectoryExecutionEventTopic() const noexcept
 {
     return trajectory_execution_event_topic_;
-}
-
-const std::string& TopicRegistry::realJointTrajectoryCommandTopic() const noexcept
-{
-    return real_joint_trajectory_cmd_topic_;
-}
-
-const std::string& TopicRegistry::simJointTrajectoryCommandTopic() const noexcept
-{
-    return sim_joint_trajectory_cmd_topic_;
 }
 
 }  // namespace davinci_arm::infra::ros

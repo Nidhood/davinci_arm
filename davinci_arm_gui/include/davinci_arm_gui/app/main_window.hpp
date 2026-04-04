@@ -3,21 +3,18 @@
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QMetaObject>
-#include <QString>
+#include <QStackedWidget>
+#include <QTimer>
+#include <QToolBar>
+#include <QToolButton>
+#include <QVector>
+#include <qtabbar.h>
 
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 #include "davinci_arm_gui/core/models/theme_id.hpp"
 
 class QLabel;
-class QListWidget;
-class QShowEvent;
-class QSplitter;
-class QStackedWidget;
-class QTabBar;
-class QTimer;
-class QToolBar;
-class QToolButton;
 
 namespace davinci_arm::core::services {
 class RecorderService;
@@ -67,6 +64,7 @@ signals:
     void pwmChanged(std::uint16_t pwm_us);
     void autoModeChanged(bool enabled);
     void stopRequested();
+    void jointBatchCommandRequested(const QVector<double>& jointsDeg);
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -91,8 +89,6 @@ private:
     void updateTopBarStyle_();
 
 private:
-    QSplitter* splitter_{nullptr};
-    QListWidget* nav_{nullptr};
     QStackedWidget* stack_{nullptr};
     QToolBar* topbar_{nullptr};
     QToolButton* theme_btn_{nullptr};

@@ -4,6 +4,7 @@
 #include "davinci_arm_gui/infra/ros/calibration_command_sink.hpp"
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <stop_token>
 #include <vector>
@@ -49,4 +50,4 @@ private:
     std::shared_ptr<ICalibrationCommandSink> sink_;
 };
 
-} // namespace davinci_arm::infra::ros
+}  // namespace davinci_arm::infra::ros
