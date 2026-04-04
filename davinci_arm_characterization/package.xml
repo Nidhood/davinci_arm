@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://www.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+    <name>davinci_arm_characterization</name>
+    <version>1.0.0</version>
+    <description>Joint and TF characterization overlays for the Davinci Arm.</description>
+
+    <maintainer email="ivan.oroz34@gmail.com">Ivan Dario Orozco Ibañez</maintainer>
+    <license>BSD-3-Clause</license>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <depend>geometry_msgs</depend>
+    <depend>rclcpp</depend>
+    <depend>tf2</depend>
+    <depend>tf2_geometry_msgs</depend>
+    <depend>tf2_ros</depend>
+    <depend>urdf</depend>
+    <depend>visualization_msgs</depend>
+
+    <exec_depend>launch</exec_depend>
+    <exec_depend>launch_ros</exec_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>

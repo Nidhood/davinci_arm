@@ -1,0 +1,24 @@
+joint_tf_visualizer:
+  ros__parameters:
+    fixed_frame: world
+    marker_topic: /davinci_arm/joint_tf_visualization
+    robot_description_node: davinci_arm_state_publisher
+
+    update_rate_hz: 8.0
+    connection_width: 0.009
+    axis_length: 0.105
+    axis_shaft_diameter: 0.014
+    axis_head_diameter: 0.024
+    axis_head_length: 0.026
+    revolute_radius: 0.055
+    revolute_arrow_length: 0.022
+    prismatic_half_length: 0.055
+    text_size: 0.034
+    text_lift: 0.014
+    revolute_samples: 48
+
+    show_fixed_joints: false
+    show_joint_names: true
+    show_joint_types: true
+    show_distances: true
+    show_limits: false
