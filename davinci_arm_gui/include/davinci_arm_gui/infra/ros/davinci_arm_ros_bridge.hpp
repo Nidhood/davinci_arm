@@ -18,8 +18,10 @@
 #include <control_msgs/msg/joint_trajectory_controller_state.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
-#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float64.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/u_int16.hpp>
 
 namespace davinci_arm::infra::ros {
 
@@ -88,10 +90,7 @@ private:
         const std::optional<double>& velocity_rad_s,
         double time_sec);
 
-    void emitReferenceTelemetry_(
-        const std::string& joint_name,
-        double ref_position_rad,
-        double time_sec);
+    void emitReferenceTelemetry_(const std::string& joint_name, double ref_position_rad, double time_sec);
 
     [[nodiscard]] bool shouldEmitJointTelemetry_(
         davinci_arm::models::Domain domain,
@@ -102,6 +101,7 @@ private:
     void updateConnection_();
 
     std::vector<double> currentPositionsOrZeros_(davinci_arm::models::Domain domain) const;
+    [[nodiscard]] bool isEstopLatched_() const;
 
     template<typename MsgT>
     void subscribe_(
@@ -113,11 +113,19 @@ private:
     void publish_(const PubT& pub, const MsgT& msg);
 
 private:
-    static constexpr std::chrono::milliseconds kConnectionTimeout {2000};
-    static constexpr std::chrono::milliseconds kUiEmitPeriod {25};
+    static constexpr std::chrono::milliseconds kConnectionTimeout{2000};
+    static constexpr std::chrono::milliseconds kUiEmitPeriod{25};
+    static constexpr std::chrono::milliseconds kEstopHoldoff{500};
 
     std::shared_ptr<rclcpp::Node> node_;
     std::shared_ptr<const TopicRegistry> topics_;
+
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_ref_angle_real_;
+    rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr pub_pwm_real_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_auto_real_;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_ref_angle_sim_;
+    rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr pub_pwm_sim_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_auto_sim_;
 
     std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
     pub_joint_pos_real_;
@@ -131,6 +139,7 @@ private:
     JointSnapshot real_state_;
     JointSnapshot sim_state_;
     std::unordered_map<std::string, double> ref_position_by_joint_;
+    TimePoint estop_latched_until_{};
 
     mutable std::mutex emit_mtx_;
     std::unordered_map<std::string, TimePoint> last_emit_real_;

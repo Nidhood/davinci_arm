@@ -12,11 +12,11 @@ namespace davinci_arm::models {
 struct TelemetrySample {
     Domain domain{Domain::Real};
 
-    // Required by the new GUI routing/filtering
+    // Routing metadata required by plots/exporter
     TelemetrySignalType signal{TelemetrySignalType::Angle};
     std::string joint_name{};
 
-    // Timestamp used by plots
+    // Timestamp
     std::chrono::steady_clock::time_point t{};
 
     // Payload

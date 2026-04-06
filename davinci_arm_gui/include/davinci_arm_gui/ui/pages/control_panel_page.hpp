@@ -1,25 +1,32 @@
 #pragma once
 
-#include "davinci_arm_gui/core/charts/sample_rate_estimator.hpp"
-#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
-#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
-
-#include <QWidget>
 #include <QVector>
+#include <QWidget>
+#include <QString>
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
+#include "davinci_arm_gui/core/charts/sample_rate_estimator.hpp"
+#include "davinci_arm_gui/core/models/domain.hpp"
+#include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+
+QT_BEGIN_NAMESPACE
 class QButtonGroup;
 class QDoubleSpinBox;
 class QFrame;
 class QProgressBar;
 class QPushButton;
 class QSlider;
+QT_END_NAMESPACE
 
 namespace davinci_arm::core::services {
 class RecorderService;
+}
+
+namespace davinci_arm::infra::ros {
+class LimitsRegistry;
 }
 
 namespace davinci_arm::ui::widgets {
@@ -42,16 +49,23 @@ public:
     void setStreamLive(davinci_arm::models::Domain domain, bool live);
 
 signals:
-    void refAngleChanged(double rad);
     void stopRequested();
-    void startRecordingRequested(double duration_s);
-    void stopRecordingRequested();
-    void exportRecordingRequested();
+    void refAngleChanged(double rad);
     void jointReferenceChanged(int jointIndex, double deg);
     void jointBatchCommandRequested(const QVector<double>& jointsDeg);
+    void startRecordingRequested(double durationSec);
+    void stopRecordingRequested();
+    void exportRecordingRequested();
+
+private slots:
+    void onFocusButtonClicked_(int index);
+    void onZeroAllClicked_();
+    void onStartRecordingClicked_();
+    void onStopRecordingClicked_();
+    void onExportRecordingClicked_();
 
 private:
-    struct JointWidgets {
+    struct JointWidgets final {
         QPushButton* focus_button{nullptr};
         QSlider* slider{nullptr};
         QDoubleSpinBox* spin{nullptr};
@@ -81,37 +95,31 @@ private:
     QString activeJointName_() const;
     int resolveJointIndex_(const davinci_arm::models::TelemetrySample& sample) const noexcept;
 
-private slots:
-    void onFocusButtonClicked_(int index);
-    void onZeroAllClicked_();
-    void onStartRecordingClicked_();
-    void onStopRecordingClicked_();
-    void onExportRecordingClicked_();
-
 private:
-    const davinci_arm::infra::ros::LimitsRegistry* limits_{nullptr};
+    static constexpr std::size_t kJointCount = 5;
+
     davinci_arm::core::services::RecorderService* recorder_service_{nullptr};
+    const davinci_arm::infra::ros::LimitsRegistry* limits_{nullptr};
 
     QButtonGroup* focus_group_{nullptr};
-    std::array<JointWidgets, 5> joint_widgets_{};
+    std::array<JointWidgets, kJointCount> joint_widgets_{};
     QPushButton* zero_all_btn_{nullptr};
 
     QDoubleSpinBox* recording_duration_{nullptr};
+    QProgressBar* recording_progress_{nullptr};
     QPushButton* start_recording_btn_{nullptr};
     QPushButton* stop_recording_btn_{nullptr};
     QPushButton* export_recording_btn_{nullptr};
-    QProgressBar* recording_progress_{nullptr};
 
     davinci_arm::ui::widgets::AngleRefPlot* angle_ref_plot_{nullptr};
     davinci_arm::ui::widgets::TrackingErrorPlot* error_plot_{nullptr};
 
     davinci_arm::core::charts::SampleRateEstimator sample_rate_estimator_{};
 
-    int active_joint_index_{0};
-    std::array<qint64, 5> last_emit_ms_{};
-
     bool real_live_{false};
     bool sim_live_{false};
+    int active_joint_index_{0};
+    std::array<qint64, kJointCount> last_emit_ms_{};
 };
 
 }  // namespace davinci_arm::ui::pages

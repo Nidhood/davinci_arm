@@ -22,6 +22,7 @@
 #include <QPushButton>
 #include <QSignalBlocker>
 #include <QSlider>
+#include <QTimer>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -148,6 +149,13 @@ ControlPanelPage::ControlPanelPage(QWidget* parent)
     applyAngleRanges_();
     updateChartTitles_();
     updateRecordingUi_();
+
+    auto* ui_refresh_timer = new QTimer(this);
+    ui_refresh_timer->setInterval(250);
+    connect(ui_refresh_timer, &QTimer::timeout, this, [this]() {
+        updateRecordingUi_();
+    });
+    ui_refresh_timer->start();
 }
 
 void ControlPanelPage::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
@@ -602,21 +610,33 @@ void ControlPanelPage::onExportRecordingClicked_()
 
     QVector<davinci_arm::models::TelemetrySample> samples;
     samples.reserve(static_cast<int>(recorded.size()));
+
     for (const auto& sample : recorded) {
-        samples.push_back(sample);
+        const auto signal = signalTypeOf(sample);
+        if (!sample.valid || !signal.has_value()) {
+            continue;
+        }
+
+        if (*signal == TelemetrySignalType::Angle || *signal == TelemetrySignalType::AngleRef) {
+            samples.push_back(sample);
+        }
+    }
+
+    if (samples.isEmpty()) {
+        QMessageBox::information(this, "Export", "There is no angle/reference telemetry to export yet.");
+        return;
     }
 
     davinci_arm::models::CsvExportOptions default_opts;
     default_opts.include_header_comments = true;
     default_opts.decimals = 6;
     default_opts.columns = {
-        "Domain",
+        "joint_name",
+        "domain",
         "t_rel_s",
         "arm_angle_deg",
         "ref_angle_deg",
         "tracking_error_deg",
-        "motor_speed_rad_s",
-        "pwm_us",
         "valid"
     };
 
@@ -633,8 +653,12 @@ void ControlPanelPage::onExportRecordingClicked_()
 void ControlPanelPage::onTelemetry(const davinci_arm::models::TelemetrySample& sample)
 {
     if (!sample.valid) {
+        updateRecordingUi_();
         return;
     }
+
+    // Keep recording/export UI fresh regardless of active joint selection.
+    updateRecordingUi_();
 
     const auto signal = signalTypeOf(sample);
     if (!signal.has_value()) {
@@ -659,8 +683,6 @@ void ControlPanelPage::onTelemetry(const davinci_arm::models::TelemetrySample& s
     if (error_plot_) {
         error_plot_->pushSample(sample);
     }
-
-    updateRecordingUi_();
 }
 
 void ControlPanelPage::setStreamLive(davinci_arm::models::Domain domain, bool live)

@@ -1,6 +1,7 @@
 #include "davinci_arm_gui/ui/widgets/error_plot.hpp"
 
 #include "davinci_arm_gui/core/math/units.hpp"
+#include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
 #include <QVBoxLayout>
@@ -38,7 +39,11 @@ ErrorPlot::ErrorPlot(QWidget* parent)
     chart_->setObjectName("chartWidget");
     chart_->setShowSim(false);
     chart_->setShowRef(false);
-    chart_->setAutoRange(true);
+
+    // Static Y axis, not dynamic
+    chart_->setAutoRange(false);
+    chart_->setYRange(0.0, 90.0);
+
     chart_->setSeriesLabels("Abs(Real-Sim)", "", "");
 
     layout->addWidget(chart_, 1);
@@ -47,7 +52,12 @@ ErrorPlot::ErrorPlot(QWidget* parent)
 void ErrorPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
 {
     limits_ = limits;
-    (void)limits_;
+    if (!limits_ || !chart_) {
+        return;
+    }
+
+    const auto& r = limits_->errorLimits();
+    chart_->setYRange(r.min, r.max);
 }
 
 void ErrorPlot::setStreamLive(davinci_arm::models::Domain domain, bool live)

@@ -4,7 +4,8 @@
 
 namespace davinci_arm::core::logging {
 
-void DataRecorder::start(double duration_s) {
+void DataRecorder::start(double duration_s)
+{
     std::lock_guard<std::mutex> lock(mtx_);
 
     data_.clear();
@@ -15,14 +16,16 @@ void DataRecorder::start(double duration_s) {
     state_ = davinci_arm::models::RecordingState::Recording;
 }
 
-void DataRecorder::stop() {
+void DataRecorder::stop()
+{
     std::lock_guard<std::mutex> lock(mtx_);
     if (state_ == davinci_arm::models::RecordingState::Recording) {
         state_ = davinci_arm::models::RecordingState::Stopped;
     }
 }
 
-void DataRecorder::clear() {
+void DataRecorder::clear()
+{
     std::lock_guard<std::mutex> lock(mtx_);
     data_.clear();
     duration_s_ = 0.0;
@@ -31,12 +34,14 @@ void DataRecorder::clear() {
     state_ = davinci_arm::models::RecordingState::Idle;
 }
 
-bool DataRecorder::isRecording() const {
+bool DataRecorder::isRecording() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     return state_ == davinci_arm::models::RecordingState::Recording;
 }
 
-davinci_arm::models::RecordingState DataRecorder::state() const {
+davinci_arm::models::RecordingState DataRecorder::state() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     if (state_ == davinci_arm::models::RecordingState::Recording && SteadyClock::now() >= t_end_) {
         return davinci_arm::models::RecordingState::Completed;
@@ -44,7 +49,8 @@ davinci_arm::models::RecordingState DataRecorder::state() const {
     return state_;
 }
 
-void DataRecorder::pushSample(const davinci_arm::models::TelemetrySample& sample) {
+void DataRecorder::pushSample(const davinci_arm::models::TelemetrySample& sample)
+{
     std::lock_guard<std::mutex> lock(mtx_);
 
     if (state_ != davinci_arm::models::RecordingState::Recording) {
@@ -63,13 +69,15 @@ void DataRecorder::pushSample(const davinci_arm::models::TelemetrySample& sample
     data_.push_back(sample);
 }
 
-std::vector<davinci_arm::models::TelemetrySample> DataRecorder::recorded() const {
+std::vector<davinci_arm::models::TelemetrySample> DataRecorder::recorded() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     return data_;
 }
 
 std::vector<davinci_arm::models::TelemetrySample>
-DataRecorder::recorded(davinci_arm::models::Domain d) const {
+DataRecorder::recorded(davinci_arm::models::Domain d) const
+{
     std::lock_guard<std::mutex> lock(mtx_);
 
     std::vector<davinci_arm::models::TelemetrySample> out;
@@ -84,7 +92,8 @@ DataRecorder::recorded(davinci_arm::models::Domain d) const {
     return out;
 }
 
-davinci_arm::models::RecordingStats DataRecorder::stats() const {
+davinci_arm::models::RecordingStats DataRecorder::stats() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
 
     davinci_arm::models::RecordingStats st;
@@ -106,9 +115,8 @@ davinci_arm::models::RecordingStats DataRecorder::stats() const {
     st.state = should_complete ? davinci_arm::models::RecordingState::Completed : state_;
 
     if (t0_ != SteadyClock::time_point{}) {
-        const auto effective_end = (st.state == davinci_arm::models::RecordingState::Completed)
-                                   ? t_end_
-                                   : now;
+        const auto effective_end =
+            (st.state == davinci_arm::models::RecordingState::Completed) ? t_end_ : now;
         const auto elapsed = std::max(SteadyClock::duration::zero(), effective_end - t0_);
         st.elapsed_s = seconds_(elapsed);
     }
@@ -123,7 +131,8 @@ davinci_arm::models::RecordingStats DataRecorder::stats() const {
     return st;
 }
 
-double DataRecorder::seconds_(const SteadyClock::duration& d) {
+double DataRecorder::seconds_(const SteadyClock::duration& d)
+{
     return std::chrono::duration_cast<std::chrono::duration<double>>(d).count();
 }
 

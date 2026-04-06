@@ -16,6 +16,7 @@ namespace davinci_arm::ui::widgets {
 
 namespace {
 
+using davinci_arm::models::Domain;
 using davinci_arm::models::TelemetrySignalType;
 
 template<typename T>
@@ -150,6 +151,24 @@ void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample
 
     if (*signal == TelemetrySignalType::AngleRef) {
         const double ref_deg = mapJointRadToUiDeg(sample.ref_angle_rad);
+        constexpr double kRefEpsDeg = 1e-6;
+
+        // First reference sample: create the series.
+        if (!have_ref_) {
+            updateHeldRef_(ref_deg);
+            chart_->appendRef(t_sec, ref_deg);
+            chart_->setRefLive(true);
+            return;
+        }
+
+        // Ignore repeated identical reference samples.
+        if (std::abs(ref_deg - held_ref_deg_) <= kRefEpsDeg) {
+            chart_->setRefLive(true);
+            return;
+        }
+
+        // Create a proper step: hold old value until this time, then jump.
+        chart_->appendRef(t_sec, held_ref_deg_);
         updateHeldRef_(ref_deg);
         chart_->appendRef(t_sec, ref_deg);
         chart_->setRefLive(true);
@@ -162,10 +181,18 @@ void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample
 
     const double arm_deg = mapJointRadToUiDeg(sample.arm_angle_rad);
 
-    if (sample.domain == davinci_arm::models::Domain::Real ||
-            sample.domain == davinci_arm::models::Domain::Sim) {
+    if (sample.domain == Domain::Real || sample.domain == Domain::Sim) {
         chart_->append(t_sec, arm_deg, sample.domain);
-        appendHeldRefAt_(t_sec);
+
+        // Extend the held reference using only ONE timing source:
+        // prefer REAL; use SIM only when REAL is not live.
+        const bool extend_ref =
+            (sample.domain == Domain::Real) ||
+            (sample.domain == Domain::Sim && !live_real_);
+
+        if (extend_ref) {
+            appendHeldRefAt_(t_sec);
+        }
     }
 }
 
@@ -175,13 +202,13 @@ void AngleRefPlot::setStreamLive(davinci_arm::models::Domain domain, bool live)
         return;
     }
 
-    if (domain == davinci_arm::models::Domain::Real) {
+    if (domain == Domain::Real) {
         live_real_ = live;
         chart_->setRealLive(live);
-    } else if (domain == davinci_arm::models::Domain::Sim) {
+    } else if (domain == Domain::Sim) {
         live_sim_ = live;
         chart_->setSimLive(live);
-    } else if (domain == davinci_arm::models::Domain::Ref) {
+    } else if (domain == Domain::Ref) {
         chart_->setRefLive(live);
         return;
     }

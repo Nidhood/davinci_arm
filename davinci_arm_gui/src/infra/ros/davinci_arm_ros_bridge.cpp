@@ -19,7 +19,7 @@ using TelemetrySample = davinci_arm::models::TelemetrySample;
 using SteadyClock = std::chrono::steady_clock;
 using TimePoint = SteadyClock::time_point;
 
-constexpr std::array<Domain, 2> kCommandDomains {Domain::Real, Domain::Sim};
+constexpr std::array<Domain, 2> kCommandDomains{Domain::Real, Domain::Sim};
 
 template<typename T>
 void setDomainIfPresent(T& sample, Domain domain)
@@ -141,7 +141,7 @@ TelemetrySample makeTelemetrySample(
     TimePoint steady_tp,
     double t_sec)
 {
-    TelemetrySample sample {};
+    TelemetrySample sample{};
     setDomainIfPresent(sample, domain);
     setSignalIfPresent(sample, signal);
     setJointIfPresent(sample, joint_name);
@@ -296,6 +296,7 @@ void DavinciArmRosBridge::onJointState_(Domain domain, const sensor_msgs::msg::J
 
             if (i < msg.position.size()) {
                 snapshot.position_by_joint[joint_name] = msg.position[i];
+
                 if (!ref_position_by_joint_.contains(joint_name)) {
                     ref_position_by_joint_[joint_name] = msg.position[i];
                 }
@@ -510,6 +511,12 @@ std::vector<double> DavinciArmRosBridge::currentPositionsOrZeros_(Domain domain)
     return positions;
 }
 
+bool DavinciArmRosBridge::isEstopLatched_() const
+{
+    std::scoped_lock lock(state_mtx_);
+    return SteadyClock::now() < estop_latched_until_;
+}
+
 void DavinciArmRosBridge::sendJointTrajectory(
     Domain domain,
     const std::vector<double>& positions_rad,
@@ -520,6 +527,10 @@ void DavinciArmRosBridge::sendJointTrajectory(
     (void)velocities_rad_s;
     (void)accelerations_rad_s2;
     (void)time_from_start_s;
+
+    if (isEstopLatched_()) {
+        return;
+    }
 
     const auto& joints = topics_->jointNames();
     if (positions_rad.size() != joints.size()) {
@@ -588,13 +599,47 @@ void DavinciArmRosBridge::sendAutoMode(bool enabled)
 
 void DavinciArmRosBridge::sendStop()
 {
-    for (const auto domain : kCommandDomains) {
-        sendHoldPosition(domain);
+    {
+        std::scoped_lock lock(state_mtx_);
+        estop_latched_until_ = SteadyClock::now() + kEstopHoldoff;
+    }
+
+    // Publish hold twice to absorb trailing queued commands
+    for (int repeat = 0; repeat < 2; ++repeat) {
+        for (const auto domain : kCommandDomains) {
+            const auto hold = currentPositionsOrZeros_(domain);
+
+            {
+                std::scoped_lock lock(state_mtx_);
+                const auto& joints = topics_->jointNames();
+                for (std::size_t i = 0; i < joints.size() && i < hold.size(); ++i) {
+                    ref_position_by_joint_[joints[i]] = hold[i];
+                }
+            }
+
+            auto& pub_map = (domain == Domain::Real) ? pub_joint_pos_real_ : pub_joint_pos_sim_;
+            const auto& joints = topics_->jointNames();
+
+            for (std::size_t i = 0; i < joints.size() && i < hold.size(); ++i) {
+                const auto pub_it = pub_map.find(joints[i]);
+                if (pub_it == pub_map.end() || !pub_it->second) {
+                    continue;
+                }
+
+                std_msgs::msg::Float64 msg;
+                msg.data = hold[i];
+                publish_(pub_it->second, msg);
+            }
+        }
     }
 }
 
 void DavinciArmRosBridge::sendAngleReference(Domain domain, double rad)
 {
+    if (isEstopLatched_()) {
+        return;
+    }
+
     auto positions = currentPositionsOrZeros_(domain);
     if (positions.empty()) {
         return;

@@ -4,7 +4,8 @@ namespace davinci_arm::core::services {
 
 RecorderService::RecorderService() = default;
 
-void RecorderService::start(double duration_s) {
+void RecorderService::start(double duration_s)
+{
     std::lock_guard<std::mutex> lock(mtx_);
     recorder_.start(duration_s);
     last_state_ = davinci_arm::models::RecordingState::Recording;
@@ -12,12 +13,14 @@ void RecorderService::start(double duration_s) {
     completed_emitted_ = false;
 }
 
-void RecorderService::stop() {
+void RecorderService::stop()
+{
     std::lock_guard<std::mutex> lock(mtx_);
     recorder_.stop();
 }
 
-void RecorderService::clear() {
+void RecorderService::clear()
+{
     std::lock_guard<std::mutex> lock(mtx_);
     recorder_.clear();
     last_state_ = davinci_arm::models::RecordingState::Idle;
@@ -25,12 +28,14 @@ void RecorderService::clear() {
     completed_emitted_ = false;
 }
 
-bool RecorderService::isRecording() const {
+bool RecorderService::isRecording() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     return recorder_.isRecording();
 }
 
-void RecorderService::onSample(const davinci_arm::models::TelemetrySample& sample) {
+void RecorderService::onSample(const davinci_arm::models::TelemetrySample& sample)
+{
     OnProgressFn progress_cb;
     OnCompletedFn completed_cb;
     davinci_arm::models::RecordingStats st;
@@ -62,7 +67,9 @@ void RecorderService::onSample(const davinci_arm::models::TelemetrySample& sampl
             }
         }
 
-        if (completed_cb && st.state == davinci_arm::models::RecordingState::Completed && !completed_emitted_) {
+        if (completed_cb &&
+                st.state == davinci_arm::models::RecordingState::Completed &&
+                !completed_emitted_) {
             completed_emitted_ = true;
             emit_completed = true;
         }
@@ -77,22 +84,26 @@ void RecorderService::onSample(const davinci_arm::models::TelemetrySample& sampl
     }
 }
 
-std::vector<davinci_arm::models::TelemetrySample> RecorderService::recorded() const {
+std::vector<davinci_arm::models::TelemetrySample> RecorderService::recorded() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     return recorder_.recorded();
 }
 
-davinci_arm::models::RecordingStats RecorderService::stats() const {
+davinci_arm::models::RecordingStats RecorderService::stats() const
+{
     std::lock_guard<std::mutex> lock(mtx_);
     return recorder_.stats();
 }
 
-void RecorderService::setOnProgress(OnProgressFn cb) {
+void RecorderService::setOnProgress(OnProgressFn cb)
+{
     std::lock_guard<std::mutex> lock(mtx_);
     on_progress_ = std::move(cb);
 }
 
-void RecorderService::setOnCompleted(OnCompletedFn cb) {
+void RecorderService::setOnCompleted(OnCompletedFn cb)
+{
     std::lock_guard<std::mutex> lock(mtx_);
     on_completed_ = std::move(cb);
 }

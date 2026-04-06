@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,14 +24,26 @@ public:
 private:
     static std::vector<std::string> defaultColumns_();
     static bool isSupportedColumn_(const std::string& col);
+
     static std::string domainToString_(davinci_arm::models::Domain d);
+    static std::string signalToString_(davinci_arm::models::TelemetrySignalType s);
+
     static double relTimeSeconds_(const davinci_arm::models::TelemetrySample& s,
                                   const davinci_arm::models::TelemetrySample& first);
+
+    static double wrapRadPi_(double rad);
     static double trackingErrorRad_(const davinci_arm::models::TelemetrySample& s);
+
     static double radToDeg_(double rad);
+    static double mapJointRadToUiDeg_(double rad);
+
     static std::string formatFloat_(double v, int decimals);
     static std::string join_(const std::vector<std::string>& cols, char sep);
     static std::string escapeCommentValue_(const std::string& value);
+
+    static std::optional<double> columnNumericValue_(
+        const davinci_arm::models::TelemetrySample& s,
+        const std::string& col);
 
 private:
     std::string last_error_;

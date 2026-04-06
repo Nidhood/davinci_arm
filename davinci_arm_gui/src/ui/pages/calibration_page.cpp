@@ -508,6 +508,7 @@ void CalibrationPage::onStopClicked_()
     emit stopCalibrationRequested();
 }
 
+// Not working yet :c - needs real robot.
 void CalibrationPage::onApplyClicked_()
 {
     if (notes_log_) notes_log_->appendPlainText(QStringLiteral("Apply identified parameters requested."));
