@@ -7,7 +7,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "davinci_arm_gui/core/models/command_type.hpp"
 #include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
 
 namespace davinci_arm::infra::ros {
@@ -197,20 +196,6 @@ void DavinciArmRosBridge::setupPublishers_()
 {
     const auto qos = rclcpp::QoS(10).reliable();
 
-    pub_ref_angle_real_ = node_->create_publisher<std_msgs::msg::Float64>(
-                              topics_->topic(Domain::Real, davinci_arm::models::CommandType::RefAngle), qos);
-    pub_pwm_real_ = node_->create_publisher<std_msgs::msg::UInt16>(
-                        topics_->topic(Domain::Real, davinci_arm::models::CommandType::PwmCmd), qos);
-    pub_auto_real_ = node_->create_publisher<std_msgs::msg::Bool>(
-                         topics_->topic(Domain::Real, davinci_arm::models::CommandType::AutoMode), qos);
-
-    pub_ref_angle_sim_ = node_->create_publisher<std_msgs::msg::Float64>(
-                             topics_->topic(Domain::Sim, davinci_arm::models::CommandType::RefAngle), qos);
-    pub_pwm_sim_ = node_->create_publisher<std_msgs::msg::UInt16>(
-                       topics_->topic(Domain::Sim, davinci_arm::models::CommandType::PwmCmd), qos);
-    pub_auto_sim_ = node_->create_publisher<std_msgs::msg::Bool>(
-                        topics_->topic(Domain::Sim, davinci_arm::models::CommandType::AutoMode), qos);
-
     for (const auto& joint_name : topics_->jointNames()) {
         pub_joint_pos_real_.emplace(
             joint_name,
@@ -347,7 +332,6 @@ void DavinciArmRosBridge::onJointState_(Domain domain, const sensor_msgs::msg::J
 void DavinciArmRosBridge::onControllerState_(const control_msgs::msg::JointTrajectoryControllerState& msg)
 {
     const auto count = std::min(msg.joint_names.size(), msg.reference.positions.size());
-    const auto now = SteadyClock::now();
     const double t_sec = node_->now().seconds();
 
     std::vector<std::pair<std::string, double>> refs;
@@ -369,7 +353,6 @@ void DavinciArmRosBridge::onControllerState_(const control_msgs::msg::JointTraje
 
     for (const auto& [joint_name, ref] : refs) {
         emitReferenceTelemetry_(joint_name, ref, t_sec);
-        (void)now;
     }
 }
 
@@ -445,16 +428,8 @@ void DavinciArmRosBridge::emitReferenceTelemetry_(
                           ref_position_rad,
                           steady_now,
                           time_sec);
-    emit telemetryUpdated(ref_sample);
 
-    auto compat_sample = makeTelemetrySample(
-                             Domain::Sim,
-                             TelemetrySignalType::AngleRef,
-                             joint_name,
-                             ref_position_rad,
-                             steady_now,
-                             time_sec);
-    emit telemetryUpdated(compat_sample);
+    emit telemetryUpdated(ref_sample);
 }
 
 void DavinciArmRosBridge::touchRx_(Domain domain)
@@ -600,67 +575,42 @@ void DavinciArmRosBridge::sendRefAngle(double rad)
 
 void DavinciArmRosBridge::sendPwm(std::uint16_t us)
 {
-    for (const auto domain : kCommandDomains) {
-        sendPwmCommand(domain, us);
-    }
+    (void)us;
 }
 
 void DavinciArmRosBridge::sendAutoMode(bool enabled)
 {
-    for (const auto domain : kCommandDomains) {
-        sendAutoModeCommand(domain, enabled);
-    }
+    (void)enabled;
 }
 
 void DavinciArmRosBridge::sendStop()
 {
     for (const auto domain : kCommandDomains) {
-        sendAutoModeCommand(domain, false);
-        sendPwmCommand(domain, static_cast<std::uint16_t>(0));
         sendHoldPosition(domain);
     }
 }
 
 void DavinciArmRosBridge::sendAngleReference(Domain domain, double rad)
 {
-    std_msgs::msg::Float64 msg;
-    msg.data = rad;
-
-    if (domain == Domain::Real) {
-        publish_(pub_ref_angle_real_, msg);
-    } else {
-        publish_(pub_ref_angle_sim_, msg);
-    }
-
     auto positions = currentPositionsOrZeros_(domain);
-    if (!positions.empty()) {
-        positions.front() = rad;
-        sendJointTrajectory(domain, positions);
+    if (positions.empty()) {
+        return;
     }
+
+    positions.front() = rad;
+    sendJointTrajectory(domain, positions);
 }
 
 void DavinciArmRosBridge::sendPwmCommand(Domain domain, std::uint16_t us)
 {
-    std_msgs::msg::UInt16 msg;
-    msg.data = us;
-
-    if (domain == Domain::Real) {
-        publish_(pub_pwm_real_, msg);
-    } else {
-        publish_(pub_pwm_sim_, msg);
-    }
+    (void)domain;
+    (void)us;
 }
 
 void DavinciArmRosBridge::sendAutoModeCommand(Domain domain, bool enabled)
 {
-    std_msgs::msg::Bool msg;
-    msg.data = enabled;
-
-    if (domain == Domain::Real) {
-        publish_(pub_auto_real_, msg);
-    } else {
-        publish_(pub_auto_sim_, msg);
-    }
+    (void)domain;
+    (void)enabled;
 }
 
 bool DavinciArmRosBridge::isConnected() const noexcept

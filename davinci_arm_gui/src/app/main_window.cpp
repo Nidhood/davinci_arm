@@ -166,13 +166,6 @@ void MainWindow::connectPageSignals_()
 {
     connect(control_, &davinci_arm::ui::pages::ControlPanelPage::refAngleChanged,
             this, &MainWindow::refAngleChanged);
-    connect(control_, &davinci_arm::ui::pages::ControlPanelPage::pwmChanged,
-            this, &MainWindow::pwmChanged);
-    connect(control_, &davinci_arm::ui::pages::ControlPanelPage::autoModeChanged,
-    this, [this](bool auto_mode) {
-        updateModeIndicator_(auto_mode);
-        emit autoModeChanged(auto_mode);
-    });
     connect(control_, &davinci_arm::ui::pages::ControlPanelPage::stopRequested,
             this, &MainWindow::stopRequested);
     connect(control_, &davinci_arm::ui::pages::ControlPanelPage::jointBatchCommandRequested,
@@ -183,9 +176,6 @@ void MainWindow::setupStatusBar_()
 {
     status_connection_ = new QLabel("Disconnected");
     status_connection_->setObjectName("statusLabel");
-
-    status_mode_ = new QLabel("Mode: Manual");
-    status_mode_->setObjectName("statusLabel");
 
     status_real_ = new QLabel("REAL: --");
     status_real_->setObjectName("statusLabel");
@@ -202,8 +192,6 @@ void MainWindow::setupStatusBar_()
     statusBar()->setObjectName("statusBar");
     statusBar()->setSizeGripEnabled(false);
     statusBar()->addPermanentWidget(status_connection_);
-    statusBar()->addPermanentWidget(create_separator());
-    statusBar()->addPermanentWidget(status_mode_);
     statusBar()->addPermanentWidget(create_separator());
     statusBar()->addPermanentWidget(status_real_);
     statusBar()->addPermanentWidget(create_separator());
@@ -354,26 +342,6 @@ void MainWindow::updateTopBarStyle_()
 
     if (theme_btn_ && theme_btn_->menu()) {
         theme_btn_->menu()->setStyleSheet(menuStyle);
-    }
-}
-
-void MainWindow::updateModeIndicator_(bool auto_mode)
-{
-    if (!status_mode_) {
-        return;
-    }
-
-    const auto& spec = davinci_arm::ui::style::ThemeManager::instance().currentSpec();
-    if (auto_mode) {
-        status_mode_->setText("Mode: Auto");
-        status_mode_->setStyleSheet(
-            QString("color: %1 !important; font-weight: bold !important; background: transparent !important;")
-            .arg(spec.accent.name()));
-    } else {
-        status_mode_->setText("Mode: Manual");
-        status_mode_->setStyleSheet(
-            QString("color: %1 !important; font-weight: 600 !important; background: transparent !important;")
-            .arg(spec.text_muted.name()));
     }
 }
 
@@ -542,7 +510,7 @@ void MainWindow::setConnected(bool connected)
 
 void MainWindow::setControlMode(const QString& mode)
 {
-    status_mode_->setText(QString("Mode: %1").arg(mode));
+    Q_UNUSED(mode);
 }
 
 void MainWindow::setSystemStatus(const QString& status)

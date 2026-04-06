@@ -98,20 +98,6 @@ AppContext::AppContext()
 
     QObject::connect(
         &main_window_,
-        &davinci_arm::app::MainWindow::pwmChanged,
-        ros_bridge_.get(),
-        &davinci_arm::infra::ros::DavinciArmRosBridge::sendPwm,
-        Qt::QueuedConnection);
-
-    QObject::connect(
-        &main_window_,
-        &davinci_arm::app::MainWindow::autoModeChanged,
-        ros_bridge_.get(),
-        &davinci_arm::infra::ros::DavinciArmRosBridge::sendAutoMode,
-        Qt::QueuedConnection);
-
-    QObject::connect(
-        &main_window_,
         &davinci_arm::app::MainWindow::stopRequested,
         ros_bridge_.get(),
         &davinci_arm::infra::ros::DavinciArmRosBridge::sendStop,

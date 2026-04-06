@@ -18,10 +18,8 @@
 #include <control_msgs/msg/joint_trajectory_controller_state.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
-#include <std_msgs/msg/bool.hpp>
-#include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <std_msgs/msg/u_int16.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 namespace davinci_arm::infra::ros {
 
@@ -90,7 +88,10 @@ private:
         const std::optional<double>& velocity_rad_s,
         double time_sec);
 
-    void emitReferenceTelemetry_(const std::string& joint_name, double ref_position_rad, double time_sec);
+    void emitReferenceTelemetry_(
+        const std::string& joint_name,
+        double ref_position_rad,
+        double time_sec);
 
     [[nodiscard]] bool shouldEmitJointTelemetry_(
         davinci_arm::models::Domain domain,
@@ -117,13 +118,6 @@ private:
 
     std::shared_ptr<rclcpp::Node> node_;
     std::shared_ptr<const TopicRegistry> topics_;
-
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_ref_angle_real_;
-    rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr pub_pwm_real_;
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_auto_real_;
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_ref_angle_sim_;
-    rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr pub_pwm_sim_;
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_auto_sim_;
 
     std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
     pub_joint_pos_real_;

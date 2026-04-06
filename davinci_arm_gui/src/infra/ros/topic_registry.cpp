@@ -61,6 +61,14 @@ std::vector<std::string> getStringArrayEither(
     return fallback;
 }
 
+std::string stripLeadingSlashes(std::string value)
+{
+    while (!value.empty() && value.front() == '/') {
+        value.erase(value.begin());
+    }
+    return value;
+}
+
 }  // namespace
 
 TopicRegistry::TopicRegistry(rclcpp::Node& node)
@@ -69,7 +77,7 @@ TopicRegistry::TopicRegistry(rclcpp::Node& node)
         node.declare_parameter<std::string>("topic_ns.real", "/davinci_arm/real");
     }
     if (!node.has_parameter("topic_ns.sim")) {
-        node.declare_parameter<std::string>("topic_ns.sim", "/davinci_arm");
+        node.declare_parameter<std::string>("topic_ns.sim", "/davinci_arm/sim");
     }
 
     real_ns_ = normalizeNs_(node.get_parameter("topic_ns.real").as_string());
@@ -87,26 +95,28 @@ TopicRegistry::TopicRegistry(rclcpp::Node& node)
         "end_effector_link_joint",
     });
 
-    angle_ = getStringEither(node, "topics.signals.angle", "topic.signals.angle", "angle_rad");
-    motor_speed_ = getStringEither(node, "topics.signals.motor_speed", "topic.signals.motor_speed", "motor_vel_rad");
-    pwm_feedback_ = getStringEither(node, "topics.signals.pwm_feedback", "topic.signals.pwm_feedback", "esc/pwm_us_fb");
-    angle_ref_ = getStringEither(node, "topics.signals.angle_ref", "topic.signals.angle_ref", "ref_angle_rad");
+    angle_ = getStringEither(node, "topics.signals.angle", "topic.signals.angle", "/angle_rad");
+    motor_speed_ = getStringEither(node, "topics.signals.motor_speed", "topic.signals.motor_speed", "/motor_vel_rad");
+    pwm_feedback_ = getStringEither(node, "topics.signals.pwm_feedback", "topic.signals.pwm_feedback", "/esc/pwm_us_fb");
+    angle_ref_ = getStringEither(node, "topics.signals.angle_ref", "topic.signals.angle_ref", "/ref_angle_rad");
 
-    ref_angle_ = getStringEither(node, "topics.commands.ref_angle", "topic.commands.ref_angle", "ref_angle_rad");
-    pwm_cmd_ = getStringEither(node, "topics.commands.pwm_cmd", "topic.commands.pwm_cmd", "esc/pwm_us");
-    auto_mode_ = getStringEither(node, "topics.commands.auto_mode", "topic.commands.auto_mode", "esc/auto_mode");
+    ref_angle_ = getStringEither(node, "topics.commands.ref_angle", "topic.commands.ref_angle", "/ref_angle_rad");
 
-    real_joint_states_topic_ = normalizeTopic_(getStringEither(
-                                   node,
-                                   "topics.telemetry.real_joint_states",
-                                   "topics.ros.real_joint_states",
-                                   "/davinci_arm/real/joint_states"));
+    real_joint_states_topic_ = join_(
+                                   real_ns_,
+                                   getStringEither(
+                                       node,
+                                       "topics.telemetry.real_joint_states",
+                                       "topics.ros.real_joint_states",
+                                       "/joint_states"));
 
-    sim_joint_states_topic_ = normalizeTopic_(getStringEither(
-                                  node,
-                                  "topics.telemetry.sim_joint_states",
-                                  "topics.ros.sim_joint_states",
-                                  "/joint_states"));
+    sim_joint_states_topic_ = join_(
+                                  sim_ns_,
+                                  getStringEither(
+                                      node,
+                                      "topics.telemetry.sim_joint_states",
+                                      "topics.ros.sim_joint_states",
+                                      "/joint_states"));
 
     controller_state_topic_ = normalizeTopic_(getStringEither(
                                   node,
@@ -133,24 +143,25 @@ TopicRegistry::TopicRegistry(rclcpp::Node& node)
                                             "/trajectory_execution_event"));
 
     for (const auto& joint_name : joint_names_) {
-        const auto leaf = defaultCommandLeafFromJoint_(joint_name);
+        const auto default_leaf = "/" + defaultCommandLeafFromJoint_(joint_name);
 
-        const auto sim_param = "topics.commands.per_joint.sim." + joint_name;
-        const auto real_param = "topics.commands.per_joint.real." + joint_name;
+        const auto sim_param = "topics.commands.sim." + joint_name;
+        const auto real_param = "topics.commands.real." + joint_name;
 
         if (!node.has_parameter(sim_param)) {
-            node.declare_parameter<std::string>(sim_param, join_(sim_ns_, leaf));
+            node.declare_parameter<std::string>(sim_param, default_leaf);
         }
         if (!node.has_parameter(real_param)) {
-            node.declare_parameter<std::string>(real_param, join_(real_ns_, leaf));
+            node.declare_parameter<std::string>(real_param, default_leaf);
         }
 
         sim_joint_command_topics_.emplace(
             joint_name,
-            normalizeTopic_(node.get_parameter(sim_param).as_string()));
+            join_(sim_ns_, node.get_parameter(sim_param).as_string()));
+
         real_joint_command_topics_.emplace(
             joint_name,
-            normalizeTopic_(node.get_parameter(real_param).as_string()));
+            join_(real_ns_, node.get_parameter(real_param).as_string()));
     }
 }
 
@@ -181,16 +192,16 @@ std::string TopicRegistry::normalizeTopic_(std::string topic)
 
 std::string TopicRegistry::join_(const std::string& ns, const std::string& name)
 {
-    if (name.empty()) {
-        return ns;
+    const auto clean_ns = normalizeNs_(ns);
+    const auto clean_name = stripLeadingSlashes(name);
+
+    if (clean_name.empty()) {
+        return clean_ns;
     }
-    if (name.front() == '/') {
-        return normalizeTopic_(name);
+    if (clean_ns.empty()) {
+        return "/" + clean_name;
     }
-    if (ns.empty()) {
-        return "/" + name;
-    }
-    return ns + "/" + name;
+    return clean_ns + "/" + clean_name;
 }
 
 std::string TopicRegistry::stripJointSuffix_(std::string joint_name)
@@ -255,14 +266,13 @@ std::string TopicRegistry::topic(Domain domain, CommandType command) const
     case CommandType::RefAngle:
         return join_(ns, ref_angle_);
     case CommandType::PwmCmd:
-        return join_(ns, pwm_cmd_);
     case CommandType::AutoMode:
-        return join_(ns, auto_mode_);
+        break;
     default:
         break;
     }
 
-    throw std::runtime_error("TopicRegistry::topic(): unsupported CommandType");
+    throw std::runtime_error("TopicRegistry::topic(): unsupported CommandType in joint-only GUI");
 }
 
 std::string TopicRegistry::jointPositionCommandTopic(

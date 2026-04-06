@@ -58,8 +58,6 @@ private:
     std::string angle_ref_;
 
     std::string ref_angle_;
-    std::string pwm_cmd_;
-    std::string auto_mode_;
 
     std::string real_joint_states_topic_;
     std::string sim_joint_states_topic_;

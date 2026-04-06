@@ -2,20 +2,77 @@
 
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
 #include <QVBoxLayout>
+#include <cmath>
 #include <numbers>
+#include <optional>
+#include <type_traits>
 
 namespace davinci_arm::ui::widgets {
 
+namespace {
+
+using davinci_arm::models::TelemetrySignalType;
+
+template<typename T>
+std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
+{
+    if constexpr (requires { sample.signal; }) {
+        return sample.signal;
+    } else if constexpr (requires { sample.signal_type; }) {
+        return sample.signal_type;
+    } else if constexpr (requires { sample.telemetry_signal; }) {
+        return sample.telemetry_signal;
+    } else {
+        return std::nullopt;
+    }
+}
+
+// Map joint angle from [-pi, pi] to [0, 360]:
+// -pi  ->   0
+//  0   -> 180
+// +pi  -> 360
+double mapJointRadToUiDeg(double rad)
+{
+    constexpr double pi = std::numbers::pi;
+    constexpr double two_pi = 2.0 * pi;
+    constexpr double eps = 1e-9;
+
+    double wrapped = std::remainder(rad, two_pi);  // [-pi, pi]
+
+    if (std::abs(wrapped + pi) < eps) {
+        return 0.0;
+    }
+    if (std::abs(wrapped - pi) < eps) {
+        return 360.0;
+    }
+
+    double deg = (wrapped + pi) * 180.0 / pi;
+
+    if (deg < 0.0) {
+        deg += 360.0;
+    }
+    if (deg > 360.0) {
+        deg -= 360.0;
+    }
+
+    return deg;
+}
+
+}  // namespace
+
 AngleRefPlot::AngleRefPlot(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+{
     buildUi_();
 }
 
-void AngleRefPlot::buildUi_() {
+void AngleRefPlot::buildUi_()
+{
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(0, 0, 0, 0);
     root->setSpacing(0);
@@ -34,19 +91,22 @@ void AngleRefPlot::buildUi_() {
     root->addWidget(chart_, 1);
 }
 
-std::chrono::steady_clock::time_point AngleRefPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point AngleRefPlot::sampleTime_(const davinci_arm::models::TelemetrySample& s)
+{
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void AngleRefPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void AngleRefPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
+{
     limits_ = limits;
     applyLimits_();
 }
 
-void AngleRefPlot::applyLimits_() {
+void AngleRefPlot::applyLimits_()
+{
     if (!limits_ || !chart_) {
         return;
     }
@@ -55,39 +115,28 @@ void AngleRefPlot::applyLimits_() {
     chart_->setYRange(a.min, a.max);
 }
 
-void AngleRefPlot::updateHeldRef_(davinci_arm::models::Domain domain, double ref_deg) {
-    if (domain == davinci_arm::models::Domain::Real) {
-        have_real_ref_ = true;
-        have_ref_ = true;
-        held_ref_deg_ = ref_deg;
-        return;
-    }
-
-    if (domain == davinci_arm::models::Domain::Sim) {
-        if (!have_real_ref_) {
-            have_ref_ = true;
-            held_ref_deg_ = ref_deg;
-        }
-        return;
-    }
-
-    if (domain == davinci_arm::models::Domain::Ref) {
-        if (!have_real_ref_) {
-            have_ref_ = true;
-            held_ref_deg_ = ref_deg;
-        }
-    }
+void AngleRefPlot::updateHeldRef_(double ref_deg)
+{
+    have_ref_ = true;
+    held_ref_deg_ = ref_deg;
 }
 
-void AngleRefPlot::appendHeldRefAt_(double t_sec) {
+void AngleRefPlot::appendHeldRefAt_(double t_sec)
+{
     if (!chart_ || !have_ref_) {
         return;
     }
     chart_->appendRef(t_sec, held_ref_deg_);
 }
 
-void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
+void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample)
+{
     if (!chart_ || !sample.valid) {
+        return;
+    }
+
+    const auto signal = signalTypeOf(sample);
+    if (!signal.has_value()) {
         return;
     }
 
@@ -98,10 +147,19 @@ void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample
     }
 
     const double t_sec = std::chrono::duration<double>(ts - t0_).count();
-    const double arm_deg = sample.arm_angle_rad * 180.0 / std::numbers::pi;
-    const double ref_deg = sample.ref_angle_rad * 180.0 / std::numbers::pi;
 
-    updateHeldRef_(sample.domain, ref_deg);
+    if (*signal == TelemetrySignalType::AngleRef) {
+        const double ref_deg = mapJointRadToUiDeg(sample.ref_angle_rad);
+        updateHeldRef_(ref_deg);
+        chart_->appendRef(t_sec, ref_deg);
+        return;
+    }
+
+    if (*signal != TelemetrySignalType::Angle) {
+        return;
+    }
+
+    const double arm_deg = mapJointRadToUiDeg(sample.arm_angle_rad);
 
     if (sample.domain == davinci_arm::models::Domain::Real ||
             sample.domain == davinci_arm::models::Domain::Sim) {
@@ -110,7 +168,8 @@ void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample
     }
 }
 
-void AngleRefPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+void AngleRefPlot::setStreamLive(davinci_arm::models::Domain domain, bool live)
+{
     if (!chart_) {
         return;
     }
@@ -126,15 +185,15 @@ void AngleRefPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) 
         return;
     }
 
-    chart_->setRefLive(live_real_ || live_sim_);
+    chart_->setRefLive(live_real_ || live_sim_ || have_ref_);
 }
 
-void AngleRefPlot::clear() {
+void AngleRefPlot::clear()
+{
     have_t0_ = false;
     t0_ = {};
     live_real_ = false;
     live_sim_ = false;
-    have_real_ref_ = false;
     have_ref_ = false;
     held_ref_deg_ = 0.0;
 

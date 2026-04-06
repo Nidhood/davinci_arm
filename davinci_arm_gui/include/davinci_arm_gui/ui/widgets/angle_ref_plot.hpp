@@ -13,6 +13,7 @@ enum class Domain;
 }
 
 namespace davinci_arm::ui::widgets {
+
 class ChartBase;
 
 class AngleRefPlot final : public QWidget {
@@ -30,7 +31,7 @@ private:
     void buildUi_();
     void applyLimits_();
     static std::chrono::steady_clock::time_point sampleTime_(const davinci_arm::models::TelemetrySample& s);
-    void updateHeldRef_(davinci_arm::models::Domain domain, double ref_deg);
+    void updateHeldRef_(double ref_deg);
     void appendHeldRefAt_(double t_sec);
 
 private:
@@ -40,7 +41,6 @@ private:
     std::chrono::steady_clock::time_point t0_{};
     bool live_real_{false};
     bool live_sim_{false};
-    bool have_real_ref_{false};
     bool have_ref_{false};
     double held_ref_deg_{0.0};
 };

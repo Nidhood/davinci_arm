@@ -3,16 +3,40 @@
 #include "davinci_arm_gui/core/math/units.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
+#include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/chart_base.hpp"
 
 #include <QFrame>
 #include <QVBoxLayout>
 
+#include <optional>
+
 namespace davinci_arm::ui::widgets {
 
+namespace {
+
+using davinci_arm::models::TelemetrySignalType;
+
+template<typename T>
+std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
+{
+    if constexpr (requires { sample.signal; }) {
+        return sample.signal;
+    } else if constexpr (requires { sample.signal_type; }) {
+        return sample.signal_type;
+    } else if constexpr (requires { sample.telemetry_signal; }) {
+        return sample.telemetry_signal;
+    } else {
+        return std::nullopt;
+    }
+}
+
+}  // namespace
+
 AnglePlot::AnglePlot(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+{
     root_ = new QVBoxLayout(this);
     root_->setContentsMargins(0, 0, 0, 0);
     root_->setSpacing(0);
@@ -33,7 +57,8 @@ AnglePlot::AnglePlot(QWidget* parent)
     root_->addWidget(frame_, 1);
 }
 
-QWidget* AnglePlot::makeChartFrame_(QWidget* child, const char* object_name) {
+QWidget* AnglePlot::makeChartFrame_(QWidget* child, const char* object_name)
+{
     auto* frame = new QFrame();
     frame->setObjectName(object_name);
     frame->setFrameShape(QFrame::NoFrame);
@@ -45,14 +70,16 @@ QWidget* AnglePlot::makeChartFrame_(QWidget* child, const char* object_name) {
     return frame;
 }
 
-std::chrono::steady_clock::time_point AnglePlot::sampleTime_(const davinci_arm::models::TelemetrySample& s) {
+std::chrono::steady_clock::time_point AnglePlot::sampleTime_(const davinci_arm::models::TelemetrySample& s)
+{
     if (s.t == std::chrono::steady_clock::time_point{}) {
         return std::chrono::steady_clock::now();
     }
     return s.t;
 }
 
-void AnglePlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void AnglePlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
+{
     limits_ = limits;
     if (limits_ && chart_) {
         const auto& r = limits_->angleLimits();
@@ -60,7 +87,8 @@ void AnglePlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry*
     }
 }
 
-void AnglePlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+void AnglePlot::setStreamLive(davinci_arm::models::Domain domain, bool live)
+{
     if (!chart_) {
         return;
     }
@@ -74,7 +102,8 @@ void AnglePlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     }
 }
 
-void AnglePlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
+void AnglePlot::pushSample(const davinci_arm::models::TelemetrySample& sample)
+{
     if (!sample.valid || !chart_) {
         return;
     }
@@ -86,18 +115,26 @@ void AnglePlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     }
 
     const double t_sec = std::chrono::duration<double>(ts - t0_).count();
-    const double angle_deg = davinci_arm::core::math::rad_to_deg(sample.arm_angle_rad);
-    const double ref_deg = davinci_arm::core::math::rad_to_deg(sample.ref_angle_rad);
+    const auto signal = signalTypeOf(sample);
 
-    if (sample.domain == davinci_arm::models::Domain::Real ||
-            sample.domain == davinci_arm::models::Domain::Sim) {
-        chart_->append(t_sec, angle_deg, sample.domain);
+    if (signal.has_value() && *signal == TelemetrySignalType::AngleRef) {
+        const double ref_deg = davinci_arm::core::math::rad_to_deg(sample.ref_angle_rad);
+        chart_->appendRef(t_sec, ref_deg);
+        return;
     }
 
-    chart_->appendRef(t_sec, ref_deg);
+    if (signal.has_value() && *signal == TelemetrySignalType::Angle) {
+        const double angle_deg = davinci_arm::core::math::rad_to_deg(sample.arm_angle_rad);
+
+        if (sample.domain == davinci_arm::models::Domain::Real ||
+                sample.domain == davinci_arm::models::Domain::Sim) {
+            chart_->append(t_sec, angle_deg, sample.domain);
+        }
+    }
 }
 
-void AnglePlot::clear() {
+void AnglePlot::clear()
+{
     have_t0_ = false;
     if (chart_) {
         chart_->clear();

@@ -61,8 +61,6 @@ public:
 
 signals:
     void refAngleChanged(double rad);
-    void pwmChanged(std::uint16_t pwm_us);
-    void autoModeChanged(bool enabled);
     void stopRequested();
     void jointBatchCommandRequested(const QVector<double>& jointsDeg);
 
@@ -75,7 +73,6 @@ private:
     void connectPageSignals_();
     void setupStatusBar_();
     void setupScreenTracking_();
-    void updateModeIndicator_(bool auto_mode);
 
     void onNavChanged_(int row);
     void onThemeAction_();
@@ -105,7 +102,6 @@ private:
     davinci_arm::services::CalibrationService* calibration_service_{nullptr};
 
     QLabel* status_connection_{nullptr};
-    QLabel* status_mode_{nullptr};
     QLabel* status_real_{nullptr};
     QLabel* status_sim_{nullptr};
     QTimer* status_timer_{nullptr};
