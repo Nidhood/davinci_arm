@@ -1,7 +1,7 @@
 davinci_arm_gui_node:
   ros__parameters:
     topic_ns:
-      real: "/davinci_arm/real"
+      real: "/davinci_arm/sim"
       sim: "/davinci_arm/sim"
 
     topics:

@@ -7,8 +7,8 @@
 #include "davinci_arm_gui/infra/ros/limits_registry.hpp"
 #include "davinci_arm_gui/ui/widgets/angle_ref_plot.hpp"
 #include "davinci_arm_gui/ui/widgets/chart_base.hpp"
-#include "davinci_arm_gui/ui/widgets/error_plot.hpp"
 #include "davinci_arm_gui/ui/widgets/export_preview_dialog.hpp"
+#include "davinci_arm_gui/ui/widgets/tracking_error_plot.hpp"
 
 #include <QAbstractSpinBox>
 #include <QButtonGroup>
@@ -201,7 +201,7 @@ QWidget* ControlPanelPage::buildRightColumn_()
     angle_ref_plot_ = new davinci_arm::ui::widgets::AngleRefPlot(right);
     angle_ref_plot_->setMinimumHeight(360);
 
-    error_plot_ = new davinci_arm::ui::widgets::ErrorPlot(right);
+    error_plot_ = new davinci_arm::ui::widgets::TrackingErrorPlot(right);
     error_plot_->setMinimumHeight(300);
 
     if (auto* chart = chartOf(angle_ref_plot_)) {
@@ -268,13 +268,13 @@ QFrame* ControlPanelPage::buildReferencePanel_()
 
         joint_widgets_[i].slider = new QSlider(Qt::Horizontal, row);
         joint_widgets_[i].slider->setRange(0, 360);
-        joint_widgets_[i].slider->setValue(0);
+        joint_widgets_[i].slider->setValue(180);
 
         joint_widgets_[i].spin = new QDoubleSpinBox(row);
         joint_widgets_[i].spin->setRange(0.0, 360.0);
         joint_widgets_[i].spin->setDecimals(1);
         joint_widgets_[i].spin->setSuffix(" °");
-        joint_widgets_[i].spin->setValue(0.0);
+        joint_widgets_[i].spin->setValue(180.0);
         joint_widgets_[i].spin->setMinimumWidth(108);
         joint_widgets_[i].spin->setButtonSymbols(QAbstractSpinBox::NoButtons);
 
@@ -285,7 +285,7 @@ QFrame* ControlPanelPage::buildReferencePanel_()
         layout->addWidget(row);
     }
 
-    zero_all_btn_ = new QPushButton("ZERO ALL", panel);
+    zero_all_btn_ = new QPushButton("CENTER ALL", panel);
     zero_all_btn_->setMinimumHeight(38);
     layout->addWidget(zero_all_btn_);
 
@@ -478,7 +478,7 @@ QVector<double> ControlPanelPage::collectJointRefsDeg_() const
     QVector<double> values;
     values.reserve(static_cast<int>(kJointCount));
     for (const auto& joint : joint_widgets_) {
-        values.push_back(joint.spin ? joint.spin->value() : 0.0);
+        values.push_back(joint.spin ? joint.spin->value() : 180.0);
     }
     return values;
 }
@@ -520,7 +520,7 @@ void ControlPanelPage::setJointUiDeg_(int jointIndex, double deg)
 void ControlPanelPage::applyAllZero_()
 {
     for (int i = 0; i < static_cast<int>(kJointCount); ++i) {
-        setJointUiDeg_(i, 0.0);
+        setJointUiDeg_(i, 180.0);
     }
     emit jointBatchCommandRequested(collectJointRefsDeg_());
 }

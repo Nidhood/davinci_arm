@@ -32,17 +32,17 @@ std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
     }
 }
 
-// Map joint angle from [-pi, pi] to [0, 360]:
-// -pi  ->   0
-//  0   -> 180
-// +pi  -> 360
+// Map from [-pi, pi] to [0, 360]:
+// -pi -> 0
+//  0  -> 180
+// +pi -> 360
 double mapJointRadToUiDeg(double rad)
 {
     constexpr double pi = std::numbers::pi;
     constexpr double two_pi = 2.0 * pi;
     constexpr double eps = 1e-9;
 
-    double wrapped = std::remainder(rad, two_pi);  // [-pi, pi]
+    double wrapped = std::remainder(rad, two_pi);
 
     if (std::abs(wrapped + pi) < eps) {
         return 0.0;
@@ -85,7 +85,7 @@ void AngleRefPlot::buildUi_()
     chart_->setSimLive(false);
     chart_->setRefLive(false);
     chart_->setWindowSeconds(30.0);
-    chart_->setMaxPoints(800);
+    chart_->setMaxPoints(2200);
 
     applyLimits_();
     root->addWidget(chart_, 1);
@@ -152,6 +152,7 @@ void AngleRefPlot::pushSample(const davinci_arm::models::TelemetrySample& sample
         const double ref_deg = mapJointRadToUiDeg(sample.ref_angle_rad);
         updateHeldRef_(ref_deg);
         chart_->appendRef(t_sec, ref_deg);
+        chart_->setRefLive(true);
         return;
     }
 
@@ -185,7 +186,7 @@ void AngleRefPlot::setStreamLive(davinci_arm::models::Domain domain, bool live)
         return;
     }
 
-    chart_->setRefLive(live_real_ || live_sim_ || have_ref_);
+    chart_->setRefLive(have_ref_);
 }
 
 void AngleRefPlot::clear()

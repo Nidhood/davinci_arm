@@ -1,6 +1,5 @@
 #include "davinci_arm_gui/ui/widgets/angle_plot.hpp"
 
-#include "davinci_arm_gui/core/math/units.hpp"
 #include "davinci_arm_gui/core/models/domain.hpp"
 #include "davinci_arm_gui/core/models/telemetry_sample.hpp"
 #include "davinci_arm_gui/core/models/telemetry_signal_type.hpp"
@@ -10,6 +9,8 @@
 #include <QFrame>
 #include <QVBoxLayout>
 
+#include <cmath>
+#include <numbers>
 #include <optional>
 
 namespace davinci_arm::ui::widgets {
@@ -30,6 +31,33 @@ std::optional<TelemetrySignalType> signalTypeOf(const T& sample)
     } else {
         return std::nullopt;
     }
+}
+
+double mapJointRadToUiDeg(double rad)
+{
+    constexpr double pi = std::numbers::pi;
+    constexpr double two_pi = 2.0 * pi;
+    constexpr double eps = 1e-9;
+
+    double wrapped = std::remainder(rad, two_pi);
+
+    if (std::abs(wrapped + pi) < eps) {
+        return 0.0;
+    }
+    if (std::abs(wrapped - pi) < eps) {
+        return 360.0;
+    }
+
+    double deg = (wrapped + pi) * 180.0 / pi;
+
+    if (deg < 0.0) {
+        deg += 360.0;
+    }
+    if (deg > 360.0) {
+        deg -= 360.0;
+    }
+
+    return deg;
 }
 
 }  // namespace
@@ -118,13 +146,13 @@ void AnglePlot::pushSample(const davinci_arm::models::TelemetrySample& sample)
     const auto signal = signalTypeOf(sample);
 
     if (signal.has_value() && *signal == TelemetrySignalType::AngleRef) {
-        const double ref_deg = davinci_arm::core::math::rad_to_deg(sample.ref_angle_rad);
+        const double ref_deg = mapJointRadToUiDeg(sample.ref_angle_rad);
         chart_->appendRef(t_sec, ref_deg);
         return;
     }
 
     if (signal.has_value() && *signal == TelemetrySignalType::Angle) {
-        const double angle_deg = davinci_arm::core::math::rad_to_deg(sample.arm_angle_rad);
+        const double angle_deg = mapJointRadToUiDeg(sample.arm_angle_rad);
 
         if (sample.domain == davinci_arm::models::Domain::Real ||
                 sample.domain == davinci_arm::models::Domain::Sim) {

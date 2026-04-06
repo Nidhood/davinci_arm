@@ -296,6 +296,9 @@ void DavinciArmRosBridge::onJointState_(Domain domain, const sensor_msgs::msg::J
 
             if (i < msg.position.size()) {
                 snapshot.position_by_joint[joint_name] = msg.position[i];
+                if (!ref_position_by_joint_.contains(joint_name)) {
+                    ref_position_by_joint_[joint_name] = msg.position[i];
+                }
             }
             if (i < msg.velocity.size()) {
                 snapshot.velocity_by_joint[joint_name] = msg.velocity[i];

@@ -137,16 +137,18 @@ void ChartBase::rebuildSeries_() {
     sim_  = new QLineSeries();
     ref_  = new QLineSeries();
 
-    chart_->addSeries(real_);
-    chart_->addSeries(sim_);
     chart_->addSeries(ref_);
+    chart_->addSeries(sim_);
+    chart_->addSeries(real_);
+
+    ref_->attachAxis(x_);
+    ref_->attachAxis(y_);
+
+    sim_->attachAxis(x_);
+    sim_->attachAxis(y_);
 
     real_->attachAxis(x_);
     real_->attachAxis(y_);
-    sim_->attachAxis(x_);
-    sim_->attachAxis(y_);
-    ref_->attachAxis(x_);
-    ref_->attachAxis(y_);
 
     sim_->setVisible(show_sim_);
     ref_->setVisible(show_ref_);

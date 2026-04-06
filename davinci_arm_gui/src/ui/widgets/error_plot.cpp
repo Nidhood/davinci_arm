@@ -6,11 +6,31 @@
 #include <QVBoxLayout>
 
 #include <cmath>
+#include <numbers>
 
 namespace davinci_arm::ui::widgets {
 
+namespace {
+
+double wrapRadPi(double rad)
+{
+    constexpr double pi = std::numbers::pi;
+    constexpr double two_pi = 2.0 * pi;
+
+    while (rad <= -pi) {
+        rad += two_pi;
+    }
+    while (rad > pi) {
+        rad -= two_pi;
+    }
+    return rad;
+}
+
+}  // namespace
+
 ErrorPlot::ErrorPlot(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+{
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
@@ -24,12 +44,14 @@ ErrorPlot::ErrorPlot(QWidget* parent)
     layout->addWidget(chart_, 1);
 }
 
-void ErrorPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept {
+void ErrorPlot::setLimitsRegistry(const davinci_arm::infra::ros::LimitsRegistry* limits) noexcept
+{
     limits_ = limits;
     (void)limits_;
 }
 
-void ErrorPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
+void ErrorPlot::setStreamLive(davinci_arm::models::Domain domain, bool live)
+{
     if (domain == davinci_arm::models::Domain::Real) {
         real_live_ = live;
     }
@@ -41,14 +63,16 @@ void ErrorPlot::setStreamLive(davinci_arm::models::Domain domain, bool live) {
     chart_->setRealLive(err_live);
 }
 
-double ErrorPlot::toSecSinceStart_(const std::chrono::steady_clock::time_point& tp) {
+double ErrorPlot::toSecSinceStart_(const std::chrono::steady_clock::time_point& tp)
+{
     if (!t0_.has_value()) {
         t0_ = tp;
     }
     return std::chrono::duration<double>(tp - *t0_).count();
 }
 
-void ErrorPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
+void ErrorPlot::pushSample(const davinci_arm::models::TelemetrySample& sample)
+{
     if (!sample.valid || !std::isfinite(sample.arm_angle_rad)) {
         return;
     }
@@ -68,7 +92,8 @@ void ErrorPlot::pushSample(const davinci_arm::models::TelemetrySample& sample) {
     }
 }
 
-void ErrorPlot::tryEmitError_() {
+void ErrorPlot::tryEmitError_()
+{
     if (!(real_live_ && sim_live_)) {
         return;
     }
@@ -81,7 +106,7 @@ void ErrorPlot::tryEmitError_() {
         return;
     }
 
-    const double err_rad = std::fabs(a_real_ - a_sim_);
+    const double err_rad = std::fabs(wrapRadPi(a_real_ - a_sim_));
     const double err_deg = davinci_arm::core::math::rad_to_deg(err_rad);
     const auto tp = (tp_real_ > tp_sim_) ? tp_real_ : tp_sim_;
     const double t = toSecSinceStart_(tp);
@@ -89,7 +114,8 @@ void ErrorPlot::tryEmitError_() {
     chart_->append(t, err_deg, davinci_arm::models::Domain::Real);
 }
 
-void ErrorPlot::clear() {
+void ErrorPlot::clear()
+{
     have_real_ = false;
     have_sim_ = false;
     t0_.reset();
@@ -98,7 +124,8 @@ void ErrorPlot::clear() {
     }
 }
 
-void ErrorPlot::applyTheme(const davinci_arm::ui::style::ThemeSpec& spec) {
+void ErrorPlot::applyTheme(const davinci_arm::ui::style::ThemeSpec& spec)
+{
     if (chart_) {
         chart_->applyTheme(spec);
     }

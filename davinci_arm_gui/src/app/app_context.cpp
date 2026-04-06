@@ -111,11 +111,11 @@ AppContext::AppContext()
         std::vector<double> joints_rad;
         joints_rad.reserve(static_cast<std::size_t>(joints_deg.size()));
 
-        for (const double deg : joints_deg) {
-            joints_rad.push_back(deg * kDegToRad);
+        for (const double deg_ui : joints_deg) {
+            joints_rad.push_back((deg_ui - 180.0) * kDegToRad);
         }
-
         ros_bridge_->sendJointTrajectory(davinci_arm::models::Domain::Sim, joints_rad);
+        ros_bridge_->sendJointTrajectory(davinci_arm::models::Domain::Real, joints_rad);
     },
     Qt::QueuedConnection);
 }

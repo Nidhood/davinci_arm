@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     // 1. Qt first (safe argv ownership & GUI prerequisites):+
     QApplication app(argc, argv);
     qRegisterMetaType<davinci_arm::models::TelemetrySample>("davinci_arm::models::TelemetrySample");
+    qRegisterMetaType<davinci_arm::models::Domain>("davinci_arm::models::Domain");
 
     // 2. ROS after Qt:
     rclcpp::init(argc, argv);
